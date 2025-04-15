@@ -1,4 +1,4 @@
-module golog
+module github.com/lee31802/golog
 
 go 1.23.4
 
