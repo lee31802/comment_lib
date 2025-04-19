@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"golog/comm_lib/logkit"
+	"github.com/lee31802/golog/comm_lib/logkit"
 )
 
 func init() {
