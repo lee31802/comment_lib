@@ -1,8 +1,8 @@
 package logkit
 
 import (
+	"github.com/lee31802/golog/comm_lib/errors"
 	"go.uber.org/zap/zapcore"
-	"golog/comm_lib/errors"
 )
 
 func NewErrorsExtractCore(c Core) Core {
