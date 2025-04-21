@@ -1,8 +1,9 @@
-package service
+package server
 
 import (
 	"context"
-	"github.com/lee31802/golog/comm_lib/logkit"
+	"github.com/lee31802/comment_lib/constants"
+	"github.com/lee31802/comment_lib/logkit"
 	"net/http"
 	"reflect"
 	"runtime"
@@ -141,7 +142,7 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 	numIn := t.NumIn()
 	requestFields := []int{}
 	for i := 0; i < numIn; i++ {
-		if t.In(i).Implements(reflect.TypeOf((*ginwebRequest)(nil)).Elem()) {
+		if t.In(i).Implements(reflect.TypeOf((*ServerRequest)(nil)).Elem()) {
 			requestFields = append(requestFields, i)
 		}
 	}
@@ -150,11 +151,11 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 	}
 	var handlerName string
 	return func(c *gin.Context) {
-		tid := c.GetHeader(TraceIDHeader)
+		tid := c.GetHeader(constants.KeyTraceID)
 		if tid == "" {
 			tid = trace.NewRequestID()
 		}
-		rid := c.GetHeader(RequestIDHeader)
+		rid := c.GetHeader(constants.KeyRequestID)
 		if rid == "" {
 			rid = trace.NewRequestID()
 			c.Set(CtxKeyRequestID, rid)
@@ -182,7 +183,7 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 					c.AbortWithStatusJSON(http.StatusBadRequest, &jsonResposneData{ErrCode: err.Code(), ErrMsg: err.Msg()})
 					return
 				}
-				gr := req.(ginwebRequest)
+				gr := req.(ServerRequest)
 				if err := gr.Parse(c); err != nil && err != gerrors.Success {
 					logkit.FromContext(traceCtx).Error("Parse request failed", logkit.Err(err), logkit.Any("req", req))
 					c.AbortWithStatusJSON(http.StatusBadRequest, &jsonResposneData{ErrCode: err.Code(), ErrMsg: err.Msg()})

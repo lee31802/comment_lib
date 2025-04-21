@@ -1,7 +1,7 @@
 package logkit
 
 import (
-	"github.com/lee31802/golog/comm_lib/errors"
+	"github.com/lee31802/comment_lib/errors"
 	"go.uber.org/zap/zapcore"
 )
 

@@ -3,6 +3,7 @@ package encoder
 import (
 	"encoding/base64"
 	"encoding/json"
+	"github.com/lee31802/comment_lib/constants"
 	"math"
 	"strings"
 	"sync"
@@ -15,9 +16,7 @@ import (
 
 // For JSON-escaping; see jsonEncoder.safeAddString below.
 const (
-	_hex         = "0123456789abcdef"
-	keyRequestID = "request_id"
-	keyTraceID   = "trace_id"
+	_hex = "0123456789abcdef"
 )
 
 type pool struct {
@@ -146,9 +145,9 @@ func (enc *logEncoder) OpenNamespace(key string) {
 
 func (enc *logEncoder) AddString(key, val string) {
 	switch key {
-	case keyRequestID:
+	case constants.KeyRequestID:
 		enc.requestID = val
-	case keyTraceID:
+	case constants.KeyTraceID:
 		enc.traceID = val
 	default:
 		enc.addKey(key)

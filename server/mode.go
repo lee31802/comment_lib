@@ -1,4 +1,4 @@
-package service
+package server
 
 // Ginweb mode
 const (

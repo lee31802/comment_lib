@@ -1,11 +1,9 @@
-package service
+package server
 
 import (
-	"github.com/lee31802/golog/comm_lib/errors"
-	"reflect"
-
-	"git.garena.com/shopee/feed/ginweb/gerrors"
 	"github.com/gin-gonic/gin"
+	"github.com/lee31802/comment_lib/errors"
+	"reflect"
 )
 
 const (
@@ -18,17 +16,17 @@ type Request struct{}
 
 // Parse parses request from gin context.
 func (r *Request) Parse(c *gin.Context) errors.Error {
-	return gerrors.Success
+	return errors.Success
 }
 
 // Validate checks the validation of the request.
-func (r *Request) Validate() gerrors.Error {
-	return gerrors.Success
+func (r *Request) Validate() errors.Error {
+	return errors.Success
 }
 
-type ginwebRequest interface {
-	Parse(*gin.Context) gerrors.Error
-	Validate() gerrors.Error
+type ServerRequest interface {
+	Parse(*gin.Context) errors.Error
+	Validate() errors.Error
 }
 
 type requestParser struct {
@@ -42,15 +40,16 @@ func newRequestParser(req interface{}) *requestParser {
 	}
 }
 
-func (rp *requestParser) parse(c *gin.Context) gerrors.Error {
+func (rp *requestParser) parse(c *gin.Context) errors.Error {
 	rp.err = c.ShouldBind(rp.req)
 	rp.bindContext(c, rp.req)
 	if rp.err != nil {
-		return funcErrParseRequest(rp.err)
+		return errors.ErrorParseRequest
 	}
 	return nil
 }
 
+// 绑定上下文
 func (rp *requestParser) bindContext(c *gin.Context, s interface{}) {
 	typ := reflect.TypeOf(s)
 	val := reflect.ValueOf(s)
@@ -58,7 +57,6 @@ func (rp *requestParser) bindContext(c *gin.Context, s interface{}) {
 		typ = typ.Elem()
 		val = val.Elem()
 	}
-	// debugPrint(s, typ.String(), typ.Kind(), val)
 	if typ.Kind() == reflect.Struct {
 		for i := 0; i < typ.NumField(); i++ {
 			typeField := typ.Field(i)
@@ -70,6 +68,16 @@ func (rp *requestParser) bindContext(c *gin.Context, s interface{}) {
 			switch structFieldKind {
 			case reflect.Ptr:
 				if reflect.ValueOf(structField.Interface()).Elem().IsValid() {
+					//type Address struct {
+					//    Street string
+					//    City   string
+					//}
+					//
+					//type User struct {
+					//    Name    string
+					//    Address *Address
+					//}
+					// 针对address情况就需要进行递归调用
 					rp.bindContext(c, structField.Interface())
 					continue
 				}
@@ -80,6 +88,16 @@ func (rp *requestParser) bindContext(c *gin.Context, s interface{}) {
 				// 	continue
 				// }
 			case reflect.Struct:
+				//type Address struct {
+				//    Street string
+				//    City   string
+				//}
+				//
+				//type User struct {
+				//    Name    string
+				//    Address *Address
+				//}
+				// 针对address情况就需要进行递归调用
 				rp.bindContext(c, structField.Addr().Interface())
 				continue
 			}

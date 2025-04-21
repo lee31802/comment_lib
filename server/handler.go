@@ -1,4 +1,4 @@
-package service
+package server
 
 import (
 	"encoding/json"
@@ -92,7 +92,7 @@ func addHandlerInfo(method, path string, handler Handler, middlewares []gin.Hand
 	pathHandlerMap[info.Method+":"+info.URL] = getHandlerSimpleName(handlerName)
 	t := reflect.TypeOf(handler)
 	for i := 0; i < t.NumIn(); i++ {
-		if t.In(i).Implements(reflect.TypeOf((*ginwebRequest)(nil)).Elem()) {
+		if t.In(i).Implements(reflect.TypeOf((*ServerRequest)(nil)).Elem()) {
 			if req := newReqInstance(t.In(i)); req != nil {
 				if withResponse {
 					responseInfo := &responseInfo{}

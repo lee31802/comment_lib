@@ -1,4 +1,4 @@
-module github.com/lee31802/golog
+module github.com/lee31802/comment_lib
 
 go 1.23.4
 

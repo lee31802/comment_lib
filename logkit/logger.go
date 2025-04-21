@@ -1,7 +1,7 @@
 package logkit
 
 import (
-	"golog/comm_lib/logkit/lumberjack"
+	"github.com/lee31802/comment_lib/logkit/lumberjack"
 	"os"
 	"time"
 

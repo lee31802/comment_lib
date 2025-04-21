@@ -1,8 +1,8 @@
 package logkit
 
 import (
+	"github.com/lee31802/comment_lib/logkit/encoder"
 	"go.uber.org/zap/zapcore"
-	"golog/comm_lib/logkit/encoder"
 )
 
 const (
