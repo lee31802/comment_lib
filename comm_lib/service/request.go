@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/lee31802/golog/comm_lib/errors"
 	"reflect"
 
 	"git.garena.com/shopee/feed/ginweb/gerrors"
@@ -16,7 +17,7 @@ const (
 type Request struct{}
 
 // Parse parses request from gin context.
-func (r *Request) Parse(c *gin.Context) gerrors.Error {
+func (r *Request) Parse(c *gin.Context) errors.Error {
 	return gerrors.Success
 }
 
