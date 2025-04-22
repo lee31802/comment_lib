@@ -72,6 +72,7 @@ func getHandlerSimpleName(handlerName string) string {
 	return simpleName
 }
 
+// addHandlerInfo 函数通过反射机制，收集和整理了处理函数的名称、请求方法、请求路径、输入参数和输出响应的相关信息，并将这些信息存储到 handlerInfo 结构体中，同时更新了一些全局的映射和列表。
 func addHandlerInfo(method, path string, handler Handler, middlewares []gin.HandlerFunc) *handlerInfo {
 	ht := reflect.TypeOf(handler)
 	withResponse := false
@@ -95,7 +96,7 @@ func addHandlerInfo(method, path string, handler Handler, middlewares []gin.Hand
 		if t.In(i).Implements(reflect.TypeOf((*ServerRequest)(nil)).Elem()) {
 			if req := newReqInstance(t.In(i)); req != nil {
 				if withResponse {
-					responseInfo := &responseInfo{}
+					response := &responseInfo{}
 					responseValue := reflect.New(ht.Out(2))
 					if responseValue.Kind() == reflect.Ptr && reflect.TypeOf(responseValue.Elem().Interface()) != nil {
 						responseValue = responseValue.Elem()
@@ -106,21 +107,21 @@ func addHandlerInfo(method, path string, handler Handler, middlewares []gin.Hand
 					}
 					if responseTyp.Kind() == reflect.Struct {
 						var infos []*responseFieldInfo
-						for i := 0; i < responseTyp.NumField(); i++ {
-							typeField := responseTyp.Field(i)
+						for j := 0; j < responseTyp.NumField(); j++ {
+							typeField := responseTyp.Field(j)
 							infos = append(infos, &responseFieldInfo{
 								Name: typeField.Name,
 								Typ:  typeField.Type.String(),
 								Tag:  fmt.Sprintf("%v", typeField.Tag),
 							})
 						}
-						responseInfo.FieldInfos = infos
+						response.FieldInfos = infos
 					}
-					info.Response = responseInfo
+					info.Response = response
 				}
 				reqTyp := reflect.TypeOf(req).Elem()
-				requestInfo := parseRequestTypeFields(reqTyp, method, path)
-				info.Request = requestInfo
+				request := parseRequestTypeFields(reqTyp, method, path)
+				info.Request = request
 			}
 		}
 	}

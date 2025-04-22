@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"github.com/lee31802/comment_lib/constants"
+	"github.com/lee31802/comment_lib/errors"
 	"github.com/lee31802/comment_lib/logkit"
 	"net/http"
 	"reflect"
@@ -132,7 +133,7 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 		if codeTyp := t.Out(0); codeTyp.Kind() != reflect.Int {
 			panic("handler first parameter type should be `int`")
 		}
-		if errTyp := t.Out(1); !errTyp.Implements(reflect.TypeOf((*gerrors.Error)(nil)).Elem()) {
+		if errTyp := t.Out(1); !errTyp.Implements(reflect.TypeOf((*errors.Error)(nil)).Elem()) {
 			panic("handler second parameter type should be `gerrors.Error`")
 		}
 	default:
