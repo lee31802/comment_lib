@@ -94,6 +94,7 @@ func addHandlerInfo(method, path string, handler Handler, middlewares []gin.Hand
 	t := reflect.TypeOf(handler)
 	for i := 0; i < t.NumIn(); i++ {
 		if t.In(i).Implements(reflect.TypeOf((*ServerRequest)(nil)).Elem()) {
+			// 根据传入的反射类型 t 创建一个对应的实例
 			if req := newReqInstance(t.In(i)); req != nil {
 				if withResponse {
 					response := &responseInfo{}
@@ -143,7 +144,7 @@ func parseRequestTypeFields(t reflect.Type, method string, p string) *requestInf
 	jsons := make(map[string]interface{})
 	for i := 0; i < t.NumField(); i++ {
 		typeField := t.Field(i)
-		if typeField.Type.String() == "ginweb.Request" {
+		if typeField.Type.String() == "server.Request" {
 			continue
 		}
 		info := &requestFieldInfo{
@@ -152,14 +153,15 @@ func parseRequestTypeFields(t reflect.Type, method string, p string) *requestInf
 			Tag:  fmt.Sprintf("%v", typeField.Tag),
 		}
 		if val, ok := typeField.Tag.Lookup("path"); ok {
+			// 构建一个可执行的curl命令
 			path = strings.Replace(path, ":"+val, "1", -1)
 			info.Required = true
-		} else if val, ok := typeField.Tag.Lookup("json"); ok {
+		} else if val, ok = typeField.Tag.Lookup("json"); ok {
 			jsons[val] = newReqInstance(typeField.Type)
-			if val, ok := typeField.Tag.Lookup("binding"); ok && val == "required" {
+			if val, ok = typeField.Tag.Lookup("binding"); ok && val == "required" {
 				info.Required = true
 			}
-		} else if val, ok := typeField.Tag.Lookup("query"); ok {
+		} else if val, ok = typeField.Tag.Lookup("query"); ok {
 			q := url.Query()
 			q.Set(val, "1")
 			url.RawQuery = q.Encode()

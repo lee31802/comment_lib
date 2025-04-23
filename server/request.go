@@ -101,7 +101,7 @@ func (rp *requestParser) bindContext(c *gin.Context, s interface{}) {
 				rp.bindContext(c, structField.Addr().Interface())
 				continue
 			}
-			for _, binder := range ctxbBinders {
+			for _, binder := range ctxBinders {
 				err := binder.Bind(c, &typeField, &structField)
 				if err != nil {
 					rp.err = err

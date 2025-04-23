@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var ctxbBinders = []contextBinder{
+var ctxBinders = []contextBinder{
 	pathBinding{},
 	queryBinding{},
 	headerBinding{},

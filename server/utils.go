@@ -1,7 +1,9 @@
 package server
 
 import (
+	"fmt"
 	"os"
+	"strings"
 )
 
 func resolveAddress(addr []string) string {
@@ -24,4 +26,13 @@ func getWorkDir() string {
 		return ""
 	}
 	return wd
+}
+
+func debugPrint(format string, values ...interface{}) {
+	if ginwebMode == DebugMode {
+		if !strings.HasSuffix(format, "\n") {
+			format += "\n"
+		}
+		fmt.Fprintf(os.Stderr, "[Ginweb] "+format, values...)
+	}
 }
