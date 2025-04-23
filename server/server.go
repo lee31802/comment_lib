@@ -120,7 +120,7 @@ func new(options ...Option) *server {
 
 func initConfiguration(appPath string, env *Environ) *Configuration {
 	config := newConfiguration()
-	configName := fmt.Sprintf("config_%v_%v.yml", env.Env, env.Cid)
+	configName := fmt.Sprintf("config_%v.yml", env.Env)
 	configPath := path.Join(appPath, "conf", configName)
 	defaultConfigPath := path.Join(appPath, "conf", "config.yml")
 	for _, path := range []string{configPath, defaultConfigPath} {
@@ -177,13 +177,6 @@ func (g *server) initComponents() {
 		p.SetGetHandlerNameFunc(g.GetHdlSimpleNameByUrl)
 		rg.Use(p.HandlerFunc(CtxKeyHandlerName))
 	}
-	if g.opts.SoupAuthOption.Enable {
-		soupOpts := g.opts.SoupAuthOption
-		debugPrint("enable soup auth with options: %+v", soupOpts)
-		config := authenticate.DefaultSoupConfig(soupOpts.Domain)
-		authenticate.Init(config)
-		g.engine.GET(config.SoupCallbackPath, authenticate.LoginCallback(config))
-	}
 
 	if g.opts.Jaeger.Enable {
 		trace.InitJaegerTracer(env.GetService(), g.opts.Jaeger.SamplingRate)
@@ -196,15 +189,6 @@ func (g *server) initComponents() {
 
 	for _, m := range middlewares {
 		rg.Use(m)
-	}
-	// Init template
-	if g.opts.TemplatePath != "" {
-		g.engine.LoadHTMLGlob(g.opts.TemplatePath)
-	} else {
-		templatePath := path.Join(g.appPath, "templates")
-		if _, err := os.Stat(templatePath); err == nil {
-			g.engine.LoadHTMLGlob(fmt.Sprintf("%v/*", templatePath))
-		}
 	}
 	reporter.Init()
 	go reporter.ListenAndServe()
@@ -292,7 +276,7 @@ func (g *server) Run(service Service) error {
 		Handler: g.engine,
 	}
 
-	if ginwebMode == "debug" {
+	if serverMode == DebugMode {
 		g.registerAPIView()
 		debugPrint("API docs address: %v/gwapi", address)
 	}

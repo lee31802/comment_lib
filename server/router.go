@@ -5,6 +5,7 @@ import (
 	"github.com/lee31802/comment_lib/constants"
 	"github.com/lee31802/comment_lib/errors"
 	"github.com/lee31802/comment_lib/logkit"
+	"github.com/lee31802/comment_lib/trace"
 	"net/http"
 	"reflect"
 	"runtime"
@@ -101,7 +102,6 @@ func (r *router) HEAD(path string, handler Handler, middlewares ...gin.HandlerFu
 	r.Handle("HEAD", path, handler, middlewares...)
 }
 
-// wraphandler turns a normal Handler into a gin-handler compatible
 func (r *router) wraphandler(f Handler) gin.HandlerFunc {
 	return convertHandler(f, r.injector)
 }
@@ -117,11 +117,16 @@ func newReqInstance(t reflect.Type) interface{} {
 	}
 }
 
+// convert to gin.HandlerFunc
 func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 	t := reflect.TypeOf(f)
 	if t.Kind() != reflect.Func {
 		panic("handler should be a function")
 	}
+	// 返回值数量为 0：不做额外检查。
+	// 返回值数量为 1：检查返回值类型是否为 string 或者实现了 Response 接口。如果不满足条件，触发 panic。
+	// 返回值数量为 3：检查第一个返回值类型是否为 int，第二个返回值是否实现了 errors.Error 接口。如果不满足条件，触发 panic。
+	// 其他返回值数量：触发 panic。
 	switch t.NumOut() {
 	case 0:
 	case 1:
@@ -152,9 +157,9 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 	}
 	var handlerName string
 	return func(c *gin.Context) {
-		tid := c.GetHeader(constants.KeyTraceID)
-		if tid == "" {
-			tid = trace.NewRequestID()
+		traceId := c.GetHeader(constants.KeyTraceID)
+		if traceId == "" {
+			traceId = trace.NewRequestID()
 		}
 		rid := c.GetHeader(constants.KeyRequestID)
 		if rid == "" {
@@ -162,8 +167,8 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 			c.Set(CtxKeyRequestID, rid)
 		}
 		traceCtx := trace.NewContextWithRequestID(c, rid)
-		traceCtx = trace.NewContextWithTraceID(traceCtx, tid)
-		traceCtx = logkit.NewContextWith(traceCtx, trace.FieldTraceID(tid), trace.FieldRequestID(rid))
+		traceCtx = trace.NewContextWithTraceID(traceCtx, traceId)
+		traceCtx = logkit.NewContextWith(traceCtx, trace.FieldTraceID(traceId), trace.FieldRequestID(rid))
 		gwCtx := &Context{
 			ginCtx:  c,
 			Context: traceCtx,
@@ -185,12 +190,12 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 					return
 				}
 				gr := req.(ServerRequest)
-				if err := gr.Parse(c); err != nil && err != gerrors.Success {
+				if err := gr.Parse(c); err != nil && err != errors.Success {
 					logkit.FromContext(traceCtx).Error("Parse request failed", logkit.Err(err), logkit.Any("req", req))
 					c.AbortWithStatusJSON(http.StatusBadRequest, &jsonResposneData{ErrCode: err.Code(), ErrMsg: err.Msg()})
 					return
 				}
-				if err := gr.Validate(); err != nil && err != gerrors.Success {
+				if err := gr.Validate(); err != nil && err != errors.Success {
 					logkit.FromContext(traceCtx).Error("Validate request failed", logkit.Err(err), logkit.Any("req", req))
 					c.AbortWithStatusJSON(http.StatusBadRequest, &jsonResposneData{ErrCode: err.Code(), ErrMsg: err.Msg()})
 					return
@@ -218,11 +223,11 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 				c.String(http.StatusOK, i.(string))
 			}
 		case 3:
-			err := ret[1].Interface().(gerrors.Error)
+			gErr := ret[1].Interface().(errors.Error)
 			resp := &jsonResponse{
 				jsonResposneData: jsonResposneData{
-					ErrCode: err.Code(),
-					ErrMsg:  err.Msg(),
+					ErrCode: gErr.GetCode(),
+					ErrMsg:  gErr.GetMsg(),
 					Data:    ret[2].Interface(),
 				},
 				httpStatusCode: int(ret[0].Int()),

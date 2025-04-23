@@ -1,11 +1,10 @@
 package server
 
 import (
+	"github.com/lee31802/comment_lib/errors"
 	"io"
 
 	"github.com/gin-gonic/gin"
-
-	"git.garena.com/shopee/feed/ginweb/gerrors"
 )
 
 // Response represents an abstraction of http response.
@@ -51,14 +50,14 @@ func (fs *fileResponse) Render(ctx *gin.Context) {
 }
 
 // JSONResponse returns a json response that serializes the given struct as JSON into the response body.
-func JSONResponse(httpStatusCode int, err gerrors.Error, data interface{}) Response {
+func JSONResponse(httpStatusCode int, err errors.Error, data interface{}) Response {
 	if err == nil {
-		err = gerrors.Success
+		err = errors.Success
 	}
 	return &jsonResponse{
 		jsonResposneData: jsonResposneData{
-			ErrCode: err.Code(),
-			ErrMsg:  err.Msg(),
+			ErrCode: err.GetCode(),
+			ErrMsg:  err.GetMsg(),
 			Data:    data,
 		},
 		httpStatusCode: httpStatusCode,
@@ -69,11 +68,11 @@ func JSONResponse(httpStatusCode int, err gerrors.Error, data interface{}) Respo
 type jsonResponse struct {
 	jsonResposneData
 	httpStatusCode int
-	err            gerrors.Error
+	err            errors.Error
 }
 
 type jsonResposneData struct {
-	ErrCode   uint32      `json:"code"`
+	ErrCode   int32       `json:"code"`
 	ErrMsg    string      `json:"msg"`
 	Data      interface{} `json:"data"`
 	RequestID *string     `json:"request_id,omitempty"`
@@ -83,7 +82,7 @@ func (resp *jsonResponse) Render(ctx *gin.Context) {
 	if resp == nil {
 		return
 	}
-	if resp.err != gerrors.Success && resp.err != nil {
+	if resp.err != errors.Success && resp.err != nil {
 		ctx.Error(resp.err)
 	}
 	ctx.JSON(resp.httpStatusCode, resp.jsonResposneData)

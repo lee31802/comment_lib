@@ -7,10 +7,10 @@ const (
 )
 
 var (
-	serviceMode = DebugMode
+	serverMode = DebugMode
 )
 
 // SetMode changes ginweb's mode.
 func SetMode(value string) {
-	serviceMode = value
+	serverMode = value
 }

@@ -29,7 +29,7 @@ func getWorkDir() string {
 }
 
 func debugPrint(format string, values ...interface{}) {
-	if ginwebMode == DebugMode {
+	if serverMode == DebugMode {
 		if !strings.HasSuffix(format, "\n") {
 			format += "\n"
 		}

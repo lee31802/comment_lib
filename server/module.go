@@ -30,7 +30,7 @@ type ModuleInfo struct {
 
 // ConfigPath returns config location of the module.
 func (m *ModuleInfo) ConfigPath() (string, bool) {
-	configName := fmt.Sprintf("config_%v_%v.yml", m.Environ.Env, m.Environ.Cid)
+	configName := fmt.Sprintf("config_%v.yml", m.Environ.Env)
 	if path, exists := m.configPath(configDir, configName); exists {
 		return path, exists
 	}
