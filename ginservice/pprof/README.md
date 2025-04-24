@@ -79,3 +79,4 @@ Or to collect a 5-second execution trace:
 ```bash
 wget http://localhost:8080/debug/pprof/trace?seconds=5
 ```
+go mod tidy
