@@ -145,9 +145,9 @@ func (enc *logEncoder) OpenNamespace(key string) {
 
 func (enc *logEncoder) AddString(key, val string) {
 	switch key {
-	case constants.KeyRequestID:
+	case constants.CtxKeyRequestID:
 		enc.requestID = val
-	case constants.KeyTraceID:
+	case constants.CtxKeyTraceID:
 		enc.traceID = val
 	default:
 		enc.addKey(key)

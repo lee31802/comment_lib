@@ -1,4 +1,4 @@
-package server
+package ginservice
 
 import (
 	"context"
@@ -125,7 +125,7 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 	}
 	// 返回值数量为 0：不做额外检查。
 	// 返回值数量为 1：检查返回值类型是否为 string 或者实现了 Response 接口。如果不满足条件，触发 panic。
-	// 返回值数量为 3：检查第一个返回值类型是否为 int，第二个返回值是否实现了 errors.Error 接口。如果不满足条件，触发 panic。
+	// 返回值数量为 3：检查第一个返回值类型是否为 int(httpcode)，第二个返回值是否实现了 errors.Error 接口。如果不满足条件，触发 panic。
 	// 其他返回值数量：触发 panic。
 	switch t.NumOut() {
 	case 0:
@@ -148,7 +148,7 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 	numIn := t.NumIn()
 	requestFields := []int{}
 	for i := 0; i < numIn; i++ {
-		if t.In(i).Implements(reflect.TypeOf((*ServerRequest)(nil)).Elem()) {
+		if t.In(i).Implements(reflect.TypeOf((*ServiceRequest)(nil)).Elem()) {
 			requestFields = append(requestFields, i)
 		}
 	}
@@ -157,26 +157,26 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 	}
 	var handlerName string
 	return func(c *gin.Context) {
-		traceId := c.GetHeader(constants.KeyTraceID)
+		traceId := c.GetHeader(constants.CtxKeyTraceID)
 		if traceId == "" {
 			traceId = trace.NewRequestID()
 		}
-		rid := c.GetHeader(constants.KeyRequestID)
+		rid := c.GetHeader(constants.CtxKeyRequestID)
 		if rid == "" {
 			rid = trace.NewRequestID()
-			c.Set(CtxKeyRequestID, rid)
+			c.Set(constants.CtxKeyRequestID, rid)
 		}
 		traceCtx := trace.NewContextWithRequestID(c, rid)
 		traceCtx = trace.NewContextWithTraceID(traceCtx, traceId)
 		traceCtx = logkit.NewContextWith(traceCtx, trace.FieldTraceID(traceId), trace.FieldRequestID(rid))
-		gwCtx := &Context{
-			ginCtx:  c,
+		gwCtx := &constants.Context{
 			Context: traceCtx,
+			GinCtx:  c,
 		}
 		if handlerName == "" {
 			handlerName = runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
 		}
-		c.Set(CtxKeyHandlerName, handlerName)
+		c.Set(constants.CtxKeyHandlerName, handlerName)
 		injector := inject.New()
 		if parentInjector != nil {
 			injector.SetParent(parentInjector)
@@ -184,20 +184,21 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 		for _, field := range requestFields {
 			if req := newReqInstance(t.In(field)); req != nil {
 				rp := newRequestParser(req)
+				// 将req, path query等通过gin的context绑定起来
 				if err := rp.parse(c); err != nil {
 					logkit.FromContext(traceCtx).Error("Parse request failed", logkit.Err(err), logkit.Any("req", req))
-					c.AbortWithStatusJSON(http.StatusBadRequest, &jsonResposneData{ErrCode: err.Code(), ErrMsg: err.Msg()})
+					c.AbortWithStatusJSON(http.StatusBadRequest, &jsonResponseData{ErrCode: err.GetCode(), ErrMsg: err.GetMsg()})
 					return
 				}
-				gr := req.(ServerRequest)
+				gr := req.(ServiceRequest)
 				if err := gr.Parse(c); err != nil && err != errors.Success {
 					logkit.FromContext(traceCtx).Error("Parse request failed", logkit.Err(err), logkit.Any("req", req))
-					c.AbortWithStatusJSON(http.StatusBadRequest, &jsonResposneData{ErrCode: err.Code(), ErrMsg: err.Msg()})
+					c.AbortWithStatusJSON(http.StatusBadRequest, &jsonResponseData{ErrCode: err.GetCode(), ErrMsg: err.GetMsg()})
 					return
 				}
 				if err := gr.Validate(); err != nil && err != errors.Success {
 					logkit.FromContext(traceCtx).Error("Validate request failed", logkit.Err(err), logkit.Any("req", req))
-					c.AbortWithStatusJSON(http.StatusBadRequest, &jsonResposneData{ErrCode: err.Code(), ErrMsg: err.Msg()})
+					c.AbortWithStatusJSON(http.StatusBadRequest, &jsonResponseData{ErrCode: err.GetCode(), ErrMsg: err.GetMsg()})
 					return
 				}
 				injector.Map(req)
@@ -225,7 +226,7 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 		case 3:
 			gErr := ret[1].Interface().(errors.Error)
 			resp := &jsonResponse{
-				jsonResposneData: jsonResposneData{
+				jsonResponseData: jsonResponseData{
 					ErrCode: gErr.GetCode(),
 					ErrMsg:  gErr.GetMsg(),
 					Data:    ret[2].Interface(),
@@ -233,7 +234,7 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 				httpStatusCode: int(ret[0].Int()),
 			}
 			if c.Query("_show_request_id") != "" {
-				resp.jsonResposneData.RequestID = &rid
+				resp.jsonResponseData.RequestID = &rid
 			}
 			resp.Render(c)
 		}

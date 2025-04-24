@@ -1,4 +1,4 @@
-package server
+package ginservice
 
 import (
 	"github.com/lee31802/comment_lib/errors"
@@ -55,7 +55,7 @@ func JSONResponse(httpStatusCode int, err errors.Error, data interface{}) Respon
 		err = errors.Success
 	}
 	return &jsonResponse{
-		jsonResposneData: jsonResposneData{
+		jsonResponseData: jsonResponseData{
 			ErrCode: err.GetCode(),
 			ErrMsg:  err.GetMsg(),
 			Data:    data,
@@ -66,12 +66,12 @@ func JSONResponse(httpStatusCode int, err errors.Error, data interface{}) Respon
 }
 
 type jsonResponse struct {
-	jsonResposneData
+	jsonResponseData
 	httpStatusCode int
 	err            errors.Error
 }
 
-type jsonResposneData struct {
+type jsonResponseData struct {
 	ErrCode   int32       `json:"code"`
 	ErrMsg    string      `json:"msg"`
 	Data      interface{} `json:"data"`
@@ -85,7 +85,7 @@ func (resp *jsonResponse) Render(ctx *gin.Context) {
 	if resp.err != errors.Success && resp.err != nil {
 		ctx.Error(resp.err)
 	}
-	ctx.JSON(resp.httpStatusCode, resp.jsonResposneData)
+	ctx.JSON(resp.httpStatusCode, resp.jsonResponseData)
 }
 
 // RedirectResponse returns a redirect response that returns a HTTP redirect to the specific location.

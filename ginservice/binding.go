@@ -1,4 +1,4 @@
-package server
+package ginservice
 
 import (
 	"errors"
@@ -71,6 +71,7 @@ func (pb pathBinding) Bind(ctx *gin.Context, typeField *reflect.StructField, str
 			defaultValue = defaultList[1]
 		}
 	}
+	// 如果 inputFieldName 为空字符串，则使用结构体字段的名称 typeField.Name 作为参数名
 	if inputFieldName == "" {
 		inputFieldName = typeField.Name
 	}

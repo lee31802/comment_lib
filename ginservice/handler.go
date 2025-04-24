@@ -1,4 +1,4 @@
-package server
+package ginservice
 
 import (
 	"encoding/json"
@@ -93,7 +93,7 @@ func addHandlerInfo(method, path string, handler Handler, middlewares []gin.Hand
 	pathHandlerMap[info.Method+":"+info.URL] = getHandlerSimpleName(handlerName)
 	t := reflect.TypeOf(handler)
 	for i := 0; i < t.NumIn(); i++ {
-		if t.In(i).Implements(reflect.TypeOf((*ServerRequest)(nil)).Elem()) {
+		if t.In(i).Implements(reflect.TypeOf((*ServiceRequest)(nil)).Elem()) {
 			// 根据传入的反射类型 t 创建一个对应的实例
 			if req := newReqInstance(t.In(i)); req != nil {
 				if withResponse {
@@ -135,7 +135,7 @@ func parseRequestTypeFields(t reflect.Type, method string, p string) *requestInf
 	if port := os.Getenv("PORT"); port != "" {
 		host += ":" + port
 	}
-	path := path.Join(g.opts.RootPath, p)
+	path := path.Join(s.opts.RootPath, p)
 	url := url.URL{
 		Scheme: "http",
 		Host:   host,

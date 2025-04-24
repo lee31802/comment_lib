@@ -36,5 +36,6 @@ func main() {
 	logkit.FromContext(traceCtx).Info("infolog")
 	//
 	// server:1.继承了requeset会自动调用validate等方法 2.自动绑定request 3.自动生成一个可以复现的curl命令 4.自动生成接口文档
+	// 5.query携带了_show_request_id，那么就会返回requestid 6.提供了pprof 7.提供了捕捉panic的选项
 
 }

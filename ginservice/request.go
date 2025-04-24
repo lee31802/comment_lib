@@ -1,4 +1,4 @@
-package server
+package ginservice
 
 import (
 	"github.com/gin-gonic/gin"
@@ -24,7 +24,7 @@ func (r *Request) Validate() errors.Error {
 	return errors.Success
 }
 
-type ServerRequest interface {
+type ServiceRequest interface {
 	Parse(*gin.Context) errors.Error
 	Validate() errors.Error
 }
@@ -49,7 +49,6 @@ func (rp *requestParser) parse(c *gin.Context) errors.Error {
 	return nil
 }
 
-// 绑定上下文
 func (rp *requestParser) bindContext(c *gin.Context, s interface{}) {
 	typ := reflect.TypeOf(s)
 	val := reflect.ValueOf(s)
@@ -68,14 +67,14 @@ func (rp *requestParser) bindContext(c *gin.Context, s interface{}) {
 			switch structFieldKind {
 			case reflect.Ptr:
 				if reflect.ValueOf(structField.Interface()).Elem().IsValid() {
-					//type Address struct {
+					//type address struct {
 					//    Street string
 					//    City   string
 					//}
 					//
 					//type User struct {
 					//    Name    string
-					//    Address *Address
+					//    Address *address
 					//}
 					// 针对address情况就需要进行递归调用
 					rp.bindContext(c, structField.Interface())
@@ -88,19 +87,20 @@ func (rp *requestParser) bindContext(c *gin.Context, s interface{}) {
 				// 	continue
 				// }
 			case reflect.Struct:
-				//type Address struct {
+				//type address struct {
 				//    Street string
 				//    City   string
 				//}
 				//
 				//type User struct {
 				//    Name    string
-				//    Address *Address
+				//    Address address
 				//}
 				// 针对address情况就需要进行递归调用
 				rp.bindContext(c, structField.Addr().Interface())
 				continue
 			}
+			// 从gin的context中将Path,head,query的参数绑定到结构体中
 			for _, binder := range ctxBinders {
 				err := binder.Bind(c, &typeField, &structField)
 				if err != nil {

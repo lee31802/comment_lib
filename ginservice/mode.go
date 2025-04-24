@@ -1,4 +1,4 @@
-package server
+package ginservice
 
 // Ginweb mode
 const (
@@ -7,10 +7,10 @@ const (
 )
 
 var (
-	serverMode = DebugMode
+	serviceMode = DebugMode
 )
 
 // SetMode changes ginweb's mode.
 func SetMode(value string) {
-	serverMode = value
+	serviceMode = value
 }

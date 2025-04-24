@@ -1,14 +1,12 @@
-package server
+package ginservice
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"github.com/codegangsta/inject"
 	"github.com/gin-gonic/gin"
+	"github.com/lee31802/comment_lib/ginservice/pprof"
 	"html/template"
-	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"path"
@@ -16,15 +14,14 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"time"
 )
 
 // Stopper is callback invoked before ginweb has stopped.
 type Stopper func() error
 
-// server is the gin web application instance, it contains a *gin.Engine instance,
+// ginService is the gin application instance, it contains a *gin.Engine instance,
 // module maps, configuration settings and environment variables.
-type server struct {
+type ginService struct {
 	router *router
 
 	injector inject.Injector
@@ -50,7 +47,7 @@ type server struct {
 	whenStops []Stopper
 }
 
-var g *server
+var s *ginService
 
 // shortcuts
 var (
@@ -60,35 +57,37 @@ var (
 )
 
 func init() {
-	g = new()
-	Config = g.config
-	Env = g.environ
-	Opts = g.opts
+	s = new()
+	Config = s.config
+	Env = s.environ
+	Opts = s.opts
 }
 
 // Configure default ginweb app options.
 func Configure(options ...Option) {
 	for _, setter := range options {
-		setter(g.opts)
+		setter(s.opts)
 	}
 }
 
-// Run default ginweb application.
-func Run(service Service) error {
-	return g.Run(service)
+func (c *Command) Execute() error {
+	//s.Run(service)
+	//_, err := c.ExecuteC()
+	//return err
+	return nil
 }
 
-func (g *server) initConfig() {
+func (g *ginService) initConfig() {
 	appPath := g.opts.AppPath
 	if appPath == "" {
-		appPath = ginwebWorkDir()
+		appPath = getWorkDir()
 	}
 	g.appPath = appPath
 	*g.config = *initConfiguration(appPath, g.environ)
 	g.opts.updateFromConfig(g.config)
 }
 
-func (g *server) initBeforeRun() {
+func (g *ginService) initBeforeRun() {
 	g.initConfig()
 	g.initComponents()
 	g.initPlugins(g.opts.Plugins)
@@ -96,21 +95,21 @@ func (g *server) initBeforeRun() {
 }
 
 // new returns a new application instance with given config.
-func new(options ...Option) *server {
+func new(options ...Option) *ginService {
 	// Default config
 	opts := newOptions()
 	for _, setter := range options {
 		setter(opts)
 	}
-	appPath := ginwebWorkDir()
-	env := defaultEnviron()
+	appPath := getWorkDir()
+	defaultEnv := defaultEnviron()
 	config := newConfiguration()
-	g := &server{
+	g := &ginService{
 		injector: inject.New(),
 		appPath:  appPath,
 		opts:     opts,
 		config:   config,
-		environ:  env,
+		environ:  defaultEnv,
 		modules:  make(map[string]ModuleInfo),
 		stopChan: make(chan bool),
 		errChan:  make(chan error),
@@ -135,14 +134,14 @@ func initConfiguration(appPath string, env *Environ) *Configuration {
 	return config
 }
 
-func (g *server) initModuleConfigs(module ModuleInfo) {
+func (g *ginService) initModuleConfigs(module ModuleInfo) {
 	if path, exists := module.ConfigPath(); exists {
 		debugPrint("load module config: %v", path)
 		g.config.apply(path)
 	}
 }
 
-func (g *server) initPlugins(plugins []Plugin) {
+func (g *ginService) initPlugins(plugins []Plugin) {
 	for _, plugin := range plugins {
 		plugin.Install(g.injector, func(s Stopper) {
 			g.whenStops = append(g.whenStops, s)
@@ -150,7 +149,7 @@ func (g *server) initPlugins(plugins []Plugin) {
 	}
 }
 
-func (g *server) initComponents() {
+func (g *ginService) initComponents() {
 	// Init engine
 	engine := g.opts.Engine
 	if engine == nil {
@@ -173,28 +172,28 @@ func (g *server) initComponents() {
 		rg:       rg,
 	}
 	if g.opts.UploadMetrics {
-		p := ginprometheus.NewPrometheus()
-		p.SetGetHandlerNameFunc(g.GetHdlSimpleNameByUrl)
-		rg.Use(p.HandlerFunc(CtxKeyHandlerName))
+		//p := ginprometheus.NewPrometheus()
+		//p.SetGetHandlerNameFunc(g.GetHdlSimpleNameByUrl)
+		//rg.Use(p.HandlerFunc(CtxKeyHandlerName))
 	}
 
 	if g.opts.Jaeger.Enable {
-		trace.InitJaegerTracer(env.GetService(), g.opts.Jaeger.SamplingRate)
-		middlewares = append(middlewares, jaeger.RequestTracing(pathHanlderMap))
+		//trace.InitJaegerTracer(env.GetService(), g.opts.Jaeger.SamplingRate)
+		//middlewares = append(middlewares, jaeger.RequestTracing(pathHanlderMap))
 	}
 
-	if env.SupportPfb() {
-		middlewares = append(middlewares, pfb.PFB())
-	}
+	//if env.SupportPfb() {
+	//	middlewares = append(middlewares, pfb.PFB())
+	//}
 
 	for _, m := range middlewares {
 		rg.Use(m)
 	}
-	reporter.Init()
-	go reporter.ListenAndServe()
+	//reporter.Init()
+	//go reporter.ListenAndServe()
 }
 
-func (g *server) registerSignals() {
+func (g *ginService) registerSignals() {
 	go func() {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt)
@@ -204,7 +203,7 @@ func (g *server) registerSignals() {
 }
 
 // RegisterModule registers a module to application.
-func (g *server) RegisterModule(m Module) error {
+func (g *ginService) RegisterModule(m Module) error {
 	pkgPath := reflect.TypeOf(m).Elem().PkgPath()
 	pkgPath = strings.TrimLeft(pkgPath, "_")
 	if _, ok := g.modules[pkgPath]; ok {
@@ -226,11 +225,11 @@ func (g *server) RegisterModule(m Module) error {
 }
 
 // Engine returns the underlying *gin.Engine instance.
-func (g *server) Engine() *gin.Engine {
+func (g *ginService) Engine() *gin.Engine {
 	return g.engine
 }
 
-func (g *server) registerAPIView() {
+func (g *ginService) registerAPIView() {
 	debugPrint("register handlers:")
 	globalHandlerInfos.prettyPrint(false)
 	g.engine.GET("/gwapi", func(c *gin.Context) {
@@ -240,7 +239,7 @@ func (g *server) registerAPIView() {
 			return globalHandlerInfos[i].Method+globalHandlerInfos[i].URL < globalHandlerInfos[j].Method+globalHandlerInfos[j].URL
 		})
 		t.Execute(buffer, map[string]interface{}{
-			"title": "Ginweb API Doc",
+			"title": "API Doc",
 			"apis":  globalHandlerInfos,
 		})
 		c.Writer.Header().Set("Content-Type", "text/html")
@@ -249,93 +248,93 @@ func (g *server) registerAPIView() {
 }
 
 // Run starts listening and serving HTTP requests.
-func (g *server) Run(service Service) error {
-	gin.SetMode(ReleaseMode) // disable gin's debug output
-	if g.environ.Env == "live" {
-		SetMode(ReleaseMode)
-	}
-	g.initBeforeRun()
-	if err := service.BeforeStart(g.router); err != nil {
-		debugPrint("service BeforeStart() error: %v", err.Error())
-		return err
-	}
-	for _, m := range service.Modules() {
-		if err := g.RegisterModule(m); err != nil {
-			debugPrint("register module failed: %v", err.Error())
-			return err
-		}
-	}
-
-	addrs := []string{}
-	if g.opts.Address != "" {
-		addrs = append(addrs, g.opts.Address)
-	}
-	address := resolveAddress(addrs)
-	server := &http.Server{
-		Addr:    address,
-		Handler: g.engine,
-	}
-
-	if serverMode == DebugMode {
-		g.registerAPIView()
-		debugPrint("API docs address: %v/gwapi", address)
-	}
-
-	go func() {
-		debugPrint("Listening on %v", address)
-		err := server.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
-			log.Fatalf("server listen error: %s\n", err)
-		}
-		g.errChan <- err
-	}()
-
-	if err := service.AfterStart(); err != nil {
-		debugPrint("service AfterStart() error: %v", err.Error())
-		return err
-	}
-	var retErr error
-	select {
-	case <-g.stopChan:
-		debugPrint("receive stop signal")
-		break
-	case err := <-g.errChan:
-		debugPrint("error: %v", err.Error())
-		retErr = err
-		break
-	}
-	if err := service.BeforeStop(); err != nil {
-		debugPrint("service BeforeStop() error: %v", err.Error())
-		return err
-	}
-	for _, callback := range g.whenStops {
-		err := callback()
-		if err != nil {
-			debugPrint("callback error: %v", err.Error())
-		}
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	err := server.Shutdown(ctx)
-	if err != nil {
-		debugPrint("server shutdown error: %v", err.Error())
-		retErr = err
-	}
-	if err := service.AfterStop(); err != nil {
-		debugPrint("service AfterStop() error: %v", err.Error())
-		return err
-	}
-	return retErr
-}
+//func (g *ginService) Run(service Service) error {
+//	gin.SetMode(ReleaseMode) // disable gin's debug output
+//	if g.environ.Env == "live" {
+//		SetMode(ReleaseMode)
+//	}
+//	g.initBeforeRun()
+//	if err := service.BeforeStart(g.router); err != nil {
+//		debugPrint("service BeforeStart() error: %v", err.Error())
+//		return err
+//	}
+//	for _, m := range service.Modules() {
+//		if err := g.RegisterModule(m); err != nil {
+//			debugPrint("register module failed: %v", err.Error())
+//			return err
+//		}
+//	}
+//
+//	addrs := []string{}
+//	if g.opts.Address != "" {
+//		addrs = append(addrs, g.opts.Address)
+//	}
+//	address := resolveAddress(addrs)
+//	server := &http.Server{
+//		Addr:    address,
+//		Handler: g.engine,
+//	}
+//
+//	if serviceMode == DebugMode {
+//		g.registerAPIView()
+//		debugPrint("API docs address: %v/gwapi", address)
+//	}
+//
+//	go func() {
+//		debugPrint("Listening on %v", address)
+//		err := server.ListenAndServe()
+//		if err != nil && err != http.ErrServerClosed {
+//			log.Fatalf("server listen error: %s\n", err)
+//		}
+//		g.errChan <- err
+//	}()
+//
+//	if err := service.AfterStart(); err != nil {
+//		debugPrint("service AfterStart() error: %v", err.Error())
+//		return err
+//	}
+//	var retErr error
+//	select {
+//	case <-g.stopChan:
+//		debugPrint("receive stop signal")
+//		break
+//	case err := <-g.errChan:
+//		debugPrint("error: %v", err.Error())
+//		retErr = err
+//		break
+//	}
+//	if err := service.BeforeStop(); err != nil {
+//		debugPrint("service BeforeStop() error: %v", err.Error())
+//		return err
+//	}
+//	for _, callback := range g.whenStops {
+//		err := callback()
+//		if err != nil {
+//			debugPrint("callback error: %v", err.Error())
+//		}
+//	}
+//	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+//	defer cancel()
+//	err := server.Shutdown(ctx)
+//	if err != nil {
+//		debugPrint("server shutdown error: %v", err.Error())
+//		retErr = err
+//	}
+//	if err := service.AfterStop(); err != nil {
+//		debugPrint("service AfterStop() error: %v", err.Error())
+//		return err
+//	}
+//	return retErr
+//}
 
 // Stop terminates the application.
-func (g *server) Stop() {
+func (g *ginService) Stop() {
 	go func() { g.stopChan <- true }()
 }
 
-func (g *server) GetHdlSimpleNameByUrl(url string, method string) string {
+func (g *ginService) GetHdlSimpleNameByUrl(url string, method string) string {
 	key := method + ":" + url
-	v, ok := pathHanlderMap[key]
+	v, ok := pathHandlerMap[key]
 	if !ok {
 		return ""
 	}
