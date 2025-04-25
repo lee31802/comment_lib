@@ -14,6 +14,7 @@ import (
 )
 
 var (
+	// api
 	globalHandlerInfos handlerInfoList
 	// 主要用来全链路跟踪，记录每个节点的执行时间等
 	pathHandlerMap map[string]string
@@ -75,6 +76,7 @@ func getHandlerSimpleName(handlerName string) string {
 // addHandlerInfo 函数通过反射机制，收集和整理了处理函数的名称、请求方法、请求路径、输入参数和输出响应的相关信息，并将这些信息存储到 handlerInfo 结构体中，同时更新了一些全局的映射和列表。
 func addHandlerInfo(method, path string, handler Handler, middlewares []gin.HandlerFunc) *handlerInfo {
 	ht := reflect.TypeOf(handler)
+	fmt.Printf(":%v", ht.NumOut())
 	withResponse := false
 	switch ht.NumOut() {
 	case 1:
@@ -92,6 +94,7 @@ func addHandlerInfo(method, path string, handler Handler, middlewares []gin.Hand
 	}
 	pathHandlerMap[info.Method+":"+info.URL] = getHandlerSimpleName(handlerName)
 	t := reflect.TypeOf(handler)
+	fmt.Printf(":%v", t.NumIn())
 	for i := 0; i < t.NumIn(); i++ {
 		if t.In(i).Implements(reflect.TypeOf((*ServiceRequest)(nil)).Elem()) {
 			// 根据传入的反射类型 t 创建一个对应的实例
@@ -142,32 +145,48 @@ func parseRequestTypeFields(t reflect.Type, method string, p string) *requestInf
 	}
 	var fieldInfos []*requestFieldInfo
 	jsons := make(map[string]interface{})
-	for i := 0; i < t.NumField(); i++ {
-		typeField := t.Field(i)
-		if typeField.Type.String() == "server.Request" {
-			continue
-		}
-		info := &requestFieldInfo{
-			Name: typeField.Name,
-			Typ:  typeField.Type.String(),
-			Tag:  fmt.Sprintf("%v", typeField.Tag),
-		}
-		if val, ok := typeField.Tag.Lookup("path"); ok {
-			// 构建一个可执行的curl命令
-			servicePath = strings.Replace(servicePath, ":"+val, "1", -1)
-			info.Required = true
-		} else if val, ok = typeField.Tag.Lookup("json"); ok {
-			jsons[val] = newReqInstance(typeField.Type)
-			if val, ok = typeField.Tag.Lookup("binding"); ok && val == "required" {
-				info.Required = true
+
+	var buildJSON func(t reflect.Type, parentKey string, jsons map[string]interface{})
+	buildJSON = func(t reflect.Type, parentKey string, jsons map[string]interface{}) {
+		for i := 0; i < t.NumField(); i++ {
+			typeField := t.Field(i)
+			if typeField.Type.String() == "ginservice.Request" {
+				continue
 			}
-		} else if val, ok = typeField.Tag.Lookup("query"); ok {
-			q := serviceUrl.Query()
-			q.Set(val, "1")
-			serviceUrl.RawQuery = q.Encode()
+			key := typeField.Name
+			if parentKey != "" {
+				key = parentKey + "." + key
+			}
+			info := &requestFieldInfo{
+				Name: key,
+				Typ:  typeField.Type.String(),
+				Tag:  fmt.Sprintf("%v", typeField.Tag),
+			}
+			if val, ok := typeField.Tag.Lookup("path"); ok {
+				servicePath = strings.Replace(servicePath, ":"+val, "1", -1)
+				info.Required = true
+			} else if val, ok := typeField.Tag.Lookup("json"); ok {
+				if typeField.Type.Kind() == reflect.Struct {
+					subJsons := make(map[string]interface{})
+					buildJSON(typeField.Type, key, subJsons)
+					jsons[val] = subJsons
+				} else {
+					jsons[val] = newReqInstance(typeField.Type)
+				}
+				if val, ok = typeField.Tag.Lookup("binding"); ok && val == "required" {
+					info.Required = true
+				}
+			} else if val, ok := typeField.Tag.Lookup("query"); ok {
+				q := serviceUrl.Query()
+				q.Set(val, "1")
+				serviceUrl.RawQuery = q.Encode()
+			}
+			fieldInfos = append(fieldInfos, info)
 		}
-		fieldInfos = append(fieldInfos, info)
 	}
+
+	buildJSON(t, "", jsons)
+
 	serviceUrl.Path = servicePath
 	curlString := fmt.Sprintf("curl -X%v '%v'", method, serviceUrl.String())
 	if len(jsons) > 0 {
@@ -182,3 +201,56 @@ func parseRequestTypeFields(t reflect.Type, method string, p string) *requestInf
 		FieldInfos: fieldInfos,
 	}
 }
+
+//func parseRequestTypeFields(t reflect.Type, method string, p string) *requestInfo {
+//	serviceHost := "127.0.0.1"
+//	if servicePort := os.Getenv("PORT"); servicePort != "" {
+//		serviceHost += ":" + servicePort
+//	}
+//	servicePath := path.Join(s.opts.RootPath, p)
+//	serviceUrl := url.URL{
+//		Scheme: "http",
+//		Host:   serviceHost,
+//	}
+//	var fieldInfos []*requestFieldInfo
+//	jsons := make(map[string]interface{})
+//	for i := 0; i < t.NumField(); i++ {
+//		typeField := t.Field(i)
+//		if typeField.Type.String() == "ginservice.Request" {
+//			continue
+//		}
+//		info := &requestFieldInfo{
+//			Name: typeField.Name,
+//			Typ:  typeField.Type.String(),
+//			Tag:  fmt.Sprintf("%v", typeField.Tag),
+//		}
+//		if val, ok := typeField.Tag.Lookup("path"); ok {
+//			// 构建一个可执行的curl命令
+//			servicePath = strings.Replace(servicePath, ":"+val, "1", -1)
+//			info.Required = true
+//		} else if val, ok = typeField.Tag.Lookup("json"); ok {
+//			jsons[val] = newReqInstance(typeField.Type)
+//			if val, ok = typeField.Tag.Lookup("binding"); ok && val == "required" {
+//				info.Required = true
+//			}
+//		} else if val, ok = typeField.Tag.Lookup("query"); ok {
+//			q := serviceUrl.Query()
+//			q.Set(val, "1")
+//			serviceUrl.RawQuery = q.Encode()
+//		}
+//		fieldInfos = append(fieldInfos, info)
+//	}
+//	serviceUrl.Path = servicePath
+//	curlString := fmt.Sprintf("curl -X%v '%v'", method, serviceUrl.String())
+//	if len(jsons) > 0 {
+//		if buf, err := json.Marshal(&jsons); err == nil {
+//			curlString += fmt.Sprintf(" -H 'Content-Type: application/json' -d '%v'", string(buf))
+//		}
+//	}
+//	return &requestInfo{
+//		Name:       t.Name(),
+//		PkgPath:    t.PkgPath(),
+//		CurlString: curlString,
+//		FieldInfos: fieldInfos,
+//	}
+//}

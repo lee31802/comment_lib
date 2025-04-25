@@ -25,6 +25,7 @@ var (
 			router.GET("/", func() string { return "OK" })
 			return nil
 		},
+		Modules: []ginservice.Module{NewRatingModule()},
 	}
 )
 

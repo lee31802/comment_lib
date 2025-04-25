@@ -6,10 +6,6 @@ type Group struct {
 	Title string
 }
 
-var (
-	g *ginService
-)
-
 type Command struct {
 	Name string
 	// PreRun: children of this command will not inherit.
@@ -22,5 +18,5 @@ type Command struct {
 }
 
 func (cmd Command) Execute() error {
-	return g.Run(cmd)
+	return s.Run(cmd)
 }

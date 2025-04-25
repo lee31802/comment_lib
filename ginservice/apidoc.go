@@ -1,187 +1,365 @@
 package ginservice
 
-const apiDoc = `<!DOCTYPE html>
-<html>
-<head lang="en">
-  <meta charset="UTF-8">
-  <title> API Doc </title>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-  <link href="http://fonts.googleapis.com/css?family=Roboto" rel="stylesheet" type="text/css">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-  <style type="text/css">
-    body {
-      font-family: 'Roboto', sans-serif;
-    }
-    strong {
-      padding: 6px; margin: 6px;
-    }
-    pre {
-      padding: 6px; margin: 6px;
-      white-space: pre-wrap;
-    }
-    .prettyprint {
-      border: 1px solid #ccc;
-      margin-bottom: 0;
-      padding: 9px;
-    }
-    .method {
-      color: white;
-      padding: 6px 15px;
-      margin-right: 2px;
-      border-radius: 3px;
-      min-width: 80px;
-      font-weight: 700;
-    }
-    .GET {
-      background: #61affe;
-    }
-    .POST {
-      background: #49cc90;
-    }
-    .PUT {
-      background: #fca130;
-    }
-    .DELETE {
-      background: #f93e3e;
-    }
-    .menu {
-      max-height: 800px;
-      overflow: scroll;
-    }
-    li {
-      box-shadow: rgba(0, 0, 0, 0.19) 0px 0px 3px;
-      margin: 5px 0px;
-    }
-  </style>
+const apiDoc = `
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
 </head>
-<body>
-<nav class="navbar navbar-default navbar-fixed-top">
-  <div class="container-fluid">
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
-          data-target="#bs-example-navbar-collapse-1">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <a class="navbar-brand" href="#">{{.title}}</a>
-    </div>
-  </div>
-</nav>
-<div class="container-fluid" style="margin-top: 70px;margin-bottom: 20px;">
-  <div class="container-fluid">
-  <div class="menu col-md-4">
-    <ul class="nav nav-pills nav-stacked" role="tablist">
-      {{ range $key, $value := .apis }}
-      <li role="presentation">
-        <a href="#{{$key}}top" role="tab" data-toggle="tab">
-          <span class="method {{$value.Method}}">{{$value.Method}}</span><span> <b>{{$value.URL}}</b></span>
-        </a></li>
-      {{ end }}
-    </ul>
-  </div>
-  <div class="col-md-8 tab-content">
-    {{ range $key, $value := .apis}}
-    <div id="{{$key}}top"  role="tabpanel" class="tab-pane col-md-10">
-      
-      <p> <h4> Basic Info </h4> </p>
-      <table class="table table-bordered table-striped">
-        <tr>
-          <th>Key</th>
-          <th>Value</th>
-        </tr>
-        <tr>
-          <td>Handler Name</td>
-          <td> {{ $value.HandlerName }}</td>
-        </tr>
-        <tr>
-          <td>Method</td>
-          <td> {{ $value.Method }}</td>
-        </tr>
-        <tr>
-          <td>Route</td>
-          <td> {{ $value.URL }}</td>
-        </tr>
-        <tr>
-          <td>Return Type</td>
-          <td> {{ $value.ReturnType }}</td>
-        </tr>
-      </table>
-      
-      <p> <h4> Request Info </h4> </p>
-      {{ if .Request }}
-        <table class="table table-bordered table-striped">
-          <tr>
-            <th>Key</th>
-            <th>Value</th>
-          </tr>
-          <tr>
-            <td>Request Name</td>
-            <td> {{ .Request.Name }} </td>
-          </tr>
-          <tr>
-            <td>Package Path</td>
-            <td> {{ .Request.PkgPath }} </td>
-          </tr>
-          <tr>
-            <td>Example Url</td>
-            <td> <pre>{{ .Request.CurlString }}</pre></td>
-          </tr>
-        </table>
 
-        <p> <h5> Request Fields </h5> </p>
-
-        <table class="table table-bordered table-striped">
-          <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Tag</th>
-            <th>Required</th>
-          </tr>
-          {{ range $key, $value := .Request.FieldInfos }}
-          <tr>
-            <td>{{ $value.Name }}</td>
-            <td>{{ $value.Typ }}</td>
-            <td>{{ $value.Tag }}</td>
-            <td>{{ $value.Required }}</td>
-          </tr>
-          {{ end }}
-        </table>
-      {{ else }}
-        <p> Not Defined </p>
-      {{ end }}
-      
-      <p> <h4> Response Fields </h4> </p>
-      {{ if .Response }}
-        <p>Description: {{ .Response.Desc }} </p>
-        {{ if .Response.FieldInfos }}
-          <table class="table table-bordered table-striped">
-            <tr>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Tag</th>
-            </tr>
-            {{ range $key, $value := .Response.FieldInfos }}
-            <tr>
-              <td>{{ $value.Name }}</td>
-              <td>{{ $value.Typ }}</td>
-              <td>{{ $value.Tag }}</td>
-            </tr>
-            {{ end }}
-          </table>
-        {{ end }}
-      {{ else }}
-        <p> Not Defined </p>
-      {{ end }}
-      <hr>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-8">
+        <h1 class="text-3xl font-bold text-blue-600 mb-6">{{.title}}</h1>
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">目录</h2>
+        <ul class="list-disc pl-6 mb-6">
+            {{range $index, $api :=.apis}}
+            <li><a href="#api-{{$index}}" class="text-blue-600 hover:underline">{{$api.Method}} {{$api.URL}}</a></li>
+            {{end}}
+        </ul>
+        {{range $index, $api :=.apis}}
+        <div id="api-{{$index}}" class="bg-white p-6 rounded shadow mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">{{$api.Method}} {{$api.URL}}</h2>
+            <p class="text-gray-600 mb-4">Handler: {{$api.HandlerName}}</p>
+            {{if $api.Request}}
+            <h3 class="text-xl font-bold text-gray-700 mb-3">Request</h3>
+            <p class="text-gray-600 mb-2">Name: {{$api.Request.Name}}</p>
+            <p class="text-gray-600 mb-2">PkgPath: {{$api.Request.PkgPath}}</p>
+            <p class="text-gray-600 mb-4">Curl: <code>{{$api.Request.CurlString}}</code></p>
+            <table class="table-auto w-full mb-6">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-2 border">Field Name</th>
+                        <th class="px-4 py-2 border">Type</th>
+                        <th class="px-4 py-2 border">Required</th>
+                        <th class="px-4 py-2 border">Tag</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $api.Request.FieldInfos}}
+                    <tr>
+                        <td class="px-4 py-2 border">{{.Name}}</td>
+                        <td class="px-4 py-2 border">{{.Typ}}</td>
+                        <td class="px-4 py-2 border">{{.Required}}</td>
+                        <td class="px-4 py-2 border">{{.Tag}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            <h4 class="text-lg font-bold text-gray-700 mb-2">Request JSON 样例</h4>
+            <pre class="bg-gray-200 p-4 rounded mb-6" id="request-json-sample-{{$index}}"></pre>
+            <script>
+                const curlString = '{{$api.Request.CurlString}}';
+                const jsonStart = curlString.indexOf('{');
+                const jsonEnd = curlString.lastIndexOf('}');
+                if (jsonStart!== -1 && jsonEnd!== -1) {
+                    const json = curlString.substring(jsonStart, jsonEnd + 1);
+                    try {
+                        const parsedJson = JSON.parse(json);
+                        const formattedJson = JSON.stringify(parsedJson, null, 4);
+                        document.getElementById('request-json-sample-{{$index}}').textContent = formattedJson;
+                    } catch (error) {
+                        document.getElementById('request-json-sample-{{$index}}').textContent = json;
+                    }
+                }
+            </script>
+            {{else}}
+            <p class="text-gray-600 mb-4">无请求参数</p>
+            {{end}}
+            {{if $api.Response}}
+            <h3 class="text-xl font-bold text-gray-700 mb-3">Response</h3>
+            <table class="table-auto w-full mb-6">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-2 border">Field Name</th>
+                        <th class="px-4 py-2 border">Type</th>
+                        <th class="px-4 py-2 border">Tag</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $api.Response.FieldInfos}}
+                    <tr>
+                        <td class="px-4 py-2 border">{{.Name}}</td>
+                        <td class="px-4 py-2 border">{{.Typ}}</td>
+                        <td class="px-4 py-2 border">{{.Tag}}</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+            <h4 class="text-lg font-bold text-gray-700 mb-2">Response JSON 样例</h4>
+            <pre class="bg-gray-200 p-4 rounded mb-6" id="response-json-sample-{{$index}}"></pre>
+            
+            {{else}}
+            <p class="text-gray-600 mb-4">无响应参数</p>
+            {{end}}
+        </div>
+        {{end}}
     </div>
-  {{ end }}
-  </div>
-  </div>
-</div>
-<hr>
 </body>
-</html>`
+
+</html>
+`
+
+//const apiDoc = `<!DOCTYPE html>
+//<html lang="en">
+//
+//<head>
+//
+//	<meta charset="UTF-8">
+//	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+//	<title>API Doc</title>
+//	<script src="https://cdn.tailwindcss.com"></script>
+//	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+//	<style>
+//	    .method {
+//	        @apply text-white px-4 py-2 mr-2 rounded-md font-bold min-w-[80px] inline-block text-center;
+//	    }
+//
+//	    .GET {
+//	        @apply bg-blue-500;
+//	    }
+//
+//	    .POST {
+//	        @apply bg-green-500;
+//	    }
+//
+//	    .PUT {
+//	        @apply bg-yellow-500;
+//	    }
+//
+//	    .DELETE {
+//	        @apply bg-red-500;
+//	    }
+//
+//	    /* 动画效果 */
+//	    .menu li {
+//	        transition: all 0.3s ease;
+//	    }
+//
+//	    .menu li:hover {
+//	        transform: scale(1.05);
+//	        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+//	    }
+//
+//	    .tab-pane {
+//	        animation: fadeIn 0.5s ease;
+//	    }
+//
+//	    @keyframes fadeIn {
+//	        from {
+//	            opacity: 0;
+//	        }
+//
+//	        to {
+//	            opacity: 1;
+//	        }
+//	    }
+//	</style>
+//
+//</head>
+//
+//<body class="bg-gray-100">
+//
+//	<nav class="bg-gray-900 fixed top-0 w-full z-10 shadow-md">
+//	    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+//	        <a href="#" class="text-white text-xl font-bold">API Documentation</a>
+//	        <button id="menu-toggle" class="text-white md:hidden focus:outline-none">
+//	            <i class="fas fa-bars"></i>
+//	        </button>
+//	    </div>
+//	</nav>
+//	<div class="container mx-auto px-4 py-20 grid grid-cols-12 gap-4 md:gap-8">
+//	    <div class="col-span-12 md:col-span-4 menu">
+//	        <ul class="space-y-2">
+//	            <li class="bg-white rounded-md shadow-md p-3 flex items-center cursor-pointer" data-target="api1">
+//	                <span class="method GET">GET</span>
+//	                <span class="ml-2 text-gray-700 font-bold">/api/users</span>
+//	            </li>
+//	            <li class="bg-white rounded-md shadow-md p-3 flex items-center cursor-pointer" data-target="api2">
+//	                <span class="method POST">POST</span>
+//	                <span class="ml-2 text-gray-700 font-bold">/api/users</span>
+//	            </li>
+//	        </ul>
+//	    </div>
+//	    <div class="col-span-12 md:col-span-8">
+//	        <div id="api1" class="bg-white rounded-md shadow-md p-6 tab-pane hidden">
+//	            <h4 class="text-2xl font-bold mb-4 text-gray-800">Basic Info</h4>
+//	            <table class="table-auto w-full border border-gray-300">
+//	                <thead>
+//	                    <tr>
+//	                        <th class="border border-gray-300 p-3 text-left text-gray-700">Key</th>
+//	                        <th class="border border-gray-300 p-3 text-left text-gray-700">Value</th>
+//	                    </tr>
+//	                </thead>
+//	                <tbody>
+//	                    <tr>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">Handler Name</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">GetUsersHandler</td>
+//	                    </tr>
+//	                    <tr>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">Method</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">GET</td>
+//	                    </tr>
+//	                    <tr>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">Route</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">/api/users</td>
+//	                    </tr>
+//	                    <tr>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">Return Type</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">List[User]</td>
+//	                    </tr>
+//	                </tbody>
+//	            </table>
+//	            <h4 class="text-2xl font-bold mb-4 mt-6 text-gray-800">Request Info</h4>
+//	            <p class="text-gray-600">Not Defined</p>
+//	            <h4 class="text-2xl font-bold mb-4 mt-6 text-gray-800">Response Fields</h4>
+//	            <p class="text-gray-600">Description: Returns a list of users</p>
+//	            <table class="table-auto w-full border border-gray-300">
+//	                <thead>
+//	                    <tr>
+//	                        <th class="border border-gray-300 p-3 text-left text-gray-700">Name</th>
+//	                        <th class="border border-gray-300 p-3 text-left text-gray-700">Type</th>
+//	                        <th class="border border-gray-300 p-3 text-left text-gray-700">Tag</th>
+//	                    </tr>
+//	                </thead>
+//	                <tbody>
+//	                    <tr>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">id</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">int</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">required</td>
+//	                    </tr>
+//	                    <tr>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">name</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">str</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">required</td>
+//	                    </tr>
+//	                </tbody>
+//	            </table>
+//	        </div>
+//	        <div id="api2" class="bg-white rounded-md shadow-md p-6 tab-pane hidden">
+//	            <h4 class="text-2xl font-bold mb-4 text-gray-800">Basic Info</h4>
+//	            <table class="table-auto w-full border border-gray-300">
+//	                <thead>
+//	                    <tr>
+//	                        <th class="border border-gray-300 p-3 text-left text-gray-700">Key</th>
+//	                        <th class="border border-gray-300 p-3 text-left text-gray-700">Value</th>
+//	                    </tr>
+//	                </thead>
+//	                <tbody>
+//	                    <tr>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">Handler Name</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">CreateUserHandler</td>
+//	                    </tr>
+//	                    <tr>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">Method</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">POST</td>
+//	                    </tr>
+//	                    <tr>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">Route</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">/api/users</td>
+//	                    </tr>
+//	                    <tr>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">Return Type</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">User</td>
+//	                    </tr>
+//	                </tbody>
+//	            </table>
+//	            <h4 class="text-2xl font-bold mb-4 mt-6 text-gray-800">Request Info</h4>
+//	            <table class="table-auto w-full border border-gray-300">
+//	                <thead>
+//	                    <tr>
+//	                        <th class="border border-gray-300 p-3 text-left text-gray-700">Key</th>
+//	                        <th class="border border-gray-300 p-3 text-left text-gray-700">Value</th>
+//	                    </tr>
+//	                </thead>
+//	                <tbody>
+//	                    <tr>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">Request Name</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">CreateUserRequest</td>
+//	                    </tr>
+//	                    <tr>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">Package Path</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">com.example.api</td>
+//	                    </tr>
+//	                    <tr>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">Example Url</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600"><pre>curl -X POST /api/users -d '{"name": "John Doe"}'</pre></td>
+//	                    </tr>
+//	                </tbody>
+//	            </table>
+//	            <h5 class="text-lg font-bold mb-2 mt-4 text-gray-800">Request Fields</h5>
+//	            <table class="table-auto w-full border border-gray-300">
+//	                <thead>
+//	                    <tr>
+//	                        <th class="border border-gray-300 p-3 text-left text-gray-700">Name</th>
+//	                        <th class="border border-gray-300 p-3 text-left text-gray-700">Type</th>
+//	                        <th class="border border-gray-300 p-3 text-left text-gray-700">Tag</th>
+//	                        <th class="border border-gray-300 p-3 text-left text-gray-700">Required</th>
+//	                    </tr>
+//	                </thead>
+//	                <tbody>
+//	                    <tr>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">name</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">str</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">required</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">true</td>
+//	                    </tr>
+//	                </tbody>
+//	            </table>
+//	            <h4 class="text-2xl font-bold mb-4 mt-6 text-gray-800">Response Fields</h4>
+//	            <p class="text-gray-600">Description: Returns the created user</p>
+//	            <table class="table-auto w-full border border-gray-300">
+//	                <thead>
+//	                    <tr>
+//	                        <th class="border border-gray-300 p-3 text-left text-gray-700">Name</th>
+//	                        <th class="border border-gray-300 p-3 text-left text-gray-700">Type</th>
+//	                        <th class="border border-gray-300 p-3 text-left text-gray-700">Tag</th>
+//	                    </tr>
+//	                </thead>
+//	                <tbody>
+//	                    <tr>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">id</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">int</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">required</td>
+//	                    </tr>
+//	                    <tr>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">name</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">str</td>
+//	                        <td class="border border-gray-300 p-3 text-gray-600">required</td>
+//	                    </tr>
+//	                </tbody>
+//	            </table>
+//	        </div>
+//	    </div>
+//	</div>
+//	<script>
+//	    const menuItems = document.querySelectorAll('.menu li');
+//	    const tabPanes = document.querySelectorAll('.tab-pane');
+//
+//	    menuItems.forEach(item => {
+//	        item.addEventListener('click', () => {
+//	            const targetId = item.dataset.target;
+//	            tabPanes.forEach(pane => {
+//	                if (pane.id === targetId) {
+//	                    pane.classList.remove('hidden');
+//	                } else {
+//	                    pane.classList.add('hidden');
+//	                }
+//	            });
+//	        });
+//	    });
+//
+//	    const menuToggle = document.getElementById('menu-toggle');
+//	    const menu = document.querySelector('.menu');
+//	    menuToggle.addEventListener('click', () => {
+//	        menu.classList.toggle('hidden');
+//	    });
+//	</script>
+//
+//</body>
+//
+//</html>`

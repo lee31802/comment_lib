@@ -107,11 +107,42 @@ func (r *router) wraphandler(f Handler) gin.HandlerFunc {
 }
 
 func newReqInstance(t reflect.Type) interface{} {
+	if t == nil {
+		return nil
+	}
 	switch t.Kind() {
 	case reflect.Ptr:
 		return newReqInstance(t.Elem())
 	case reflect.Interface:
 		return nil
+	case reflect.Slice:
+		if t.Elem().Kind() == reflect.String {
+			return []string{"default_string_value"}
+		}
+		return reflect.MakeSlice(t, 0, 0).Interface()
+	case reflect.Array:
+		v := reflect.New(t).Elem()
+		for i := 0; i < v.Len(); i++ {
+			element := v.Index(i)
+			elementValue := reflect.ValueOf(newReqInstance(element.Type()))
+			if elementValue.IsValid() && elementValue.Type().AssignableTo(element.Type()) {
+				element.Set(elementValue)
+			}
+		}
+		return v.Interface()
+	case reflect.Map:
+		m := reflect.MakeMap(t)
+		return m.Interface()
+	case reflect.String:
+		return "default_string"
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return int64(0)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return uint64(0)
+	case reflect.Float32, reflect.Float64:
+		return float64(0)
+	case reflect.Bool:
+		return false
 	default:
 		return reflect.New(t).Interface()
 	}

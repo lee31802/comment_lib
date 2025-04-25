@@ -9,8 +9,8 @@ import (
 func resolveAddress(addr []string) string {
 	switch len(addr) {
 	case 0:
-		if port := os.Getenv("PORT"); port != "" {
-			return ":" + port
+		if servicePort := os.Getenv("PORT"); servicePort != "" {
+			return ":" + servicePort
 		}
 		return ":8080"
 	case 1:

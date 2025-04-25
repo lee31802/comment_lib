@@ -231,7 +231,13 @@ func (g *ginService) registerAPIView() {
 	debugPrint("register handlers:")
 	globalHandlerInfos.prettyPrint(false)
 	g.engine.GET("/gwapi", func(c *gin.Context) {
-		t := template.Must(template.New("gwapi").Parse(apiDoc))
+		t := template.New("gwapi")
+		t = t.Funcs(template.FuncMap{
+			"extractJson": extractJson,
+		})
+		// 解析模板
+		t, _ = t.Parse(apiDoc)
+
 		buffer := bytes.NewBuffer([]byte{})
 		sort.Slice(globalHandlerInfos[:], func(i, j int) bool {
 			return globalHandlerInfos[i].Method+globalHandlerInfos[i].URL < globalHandlerInfos[j].Method+globalHandlerInfos[j].URL
@@ -245,6 +251,18 @@ func (g *ginService) registerAPIView() {
 	})
 }
 
+func extractJson(curl string) string {
+	start := strings.Index(curl, "{")
+	if start == -1 {
+		return ""
+	}
+	end := strings.LastIndex(curl, "}")
+	if end == -1 {
+		return ""
+	}
+	return curl[start : end+1]
+}
+
 // Execute starts listening and serving HTTP requests.
 func (g *ginService) Run(cmd Command) error {
 	gin.SetMode(ReleaseMode) // disable gin's debug output
@@ -252,9 +270,11 @@ func (g *ginService) Run(cmd Command) error {
 		SetMode(ReleaseMode)
 	}
 	g.initBeforeRun()
-	if err := cmd.PreRun(g.router); err != nil {
-		debugPrint("service PreRun() error: %v", err.Error())
-		return err
+	if cmd.PreRun != nil {
+		if err := cmd.PreRun(g.router); err != nil {
+			debugPrint("service PreRun() error: %v", err.Error())
+			return err
+		}
 	}
 	for _, m := range cmd.Modules {
 		if err := g.RegisterModule(m); err != nil {
@@ -286,10 +306,11 @@ func (g *ginService) Run(cmd Command) error {
 		}
 		g.errChan <- err
 	}()
-
-	if err := cmd.PostRun(); err != nil {
-		debugPrint("service AfterStart() error: %v", err.Error())
-		return err
+	if cmd.PostRun != nil {
+		if err := cmd.PostRun(); err != nil {
+			debugPrint("service AfterStart() error: %v", err.Error())
+			return err
+		}
 	}
 	var retErr error
 	select {
@@ -301,9 +322,11 @@ func (g *ginService) Run(cmd Command) error {
 		retErr = err
 		break
 	}
-	if err := cmd.PreStop(); err != nil {
-		debugPrint("service BeforeStop() error: %v", err.Error())
-		return err
+	if cmd.PreStop != nil {
+		if err := cmd.PreStop(); err != nil {
+			debugPrint("service BeforeStop() error: %v", err.Error())
+			return err
+		}
 	}
 	for _, callback := range g.whenStops {
 		err := callback()
@@ -318,9 +341,11 @@ func (g *ginService) Run(cmd Command) error {
 		debugPrint("server shutdown error: %v", err.Error())
 		retErr = err
 	}
-	if err = cmd.PostStop(); err != nil {
-		debugPrint("service AfterStop() error: %v", err.Error())
-		return err
+	if cmd.PostStop != nil {
+		if err = cmd.PostStop(); err != nil {
+			debugPrint("service AfterStop() error: %v", err.Error())
+			return err
+		}
 	}
 	return retErr
 }
