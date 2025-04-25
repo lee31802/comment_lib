@@ -1,10 +1,8 @@
 package main
 
 import (
-	"context"
-	"fmt"
+	"github.com/lee31802/comment_lib/ginservice"
 	"github.com/lee31802/comment_lib/logkit"
-	"github.com/lee31802/comment_lib/trace"
 )
 
 func init() {
@@ -20,22 +18,32 @@ func init() {
 	)
 }
 
+var (
+	cmd = &ginservice.Command{
+		Name: "test",
+		PreRun: func(router ginservice.Router) error {
+			router.GET("/", func() string { return "OK" })
+			return nil
+		},
+	}
+)
+
 func main() {
 	// log： 1.调整了输出样式更加直观 2.自动打印context里边携带的requestid和traceid3. 结合lumberjack做了日志切割等
-	defer logkit.Sync()
-	type request struct {
-		A int
-	}
-	req := request{
-		A: 1,
-	}
-	traceCtx := logkit.NewContextWith(context.Background(), trace.FieldRequestID("22"), trace.FieldTraceID("333"))
-	err := fmt.Errorf("lxlerr")
-	//logger := logkit.FromContext(traceCtx).With(logkit.Err(err))
-	logkit.FromContext(traceCtx).Error("AreaModule.BatchGetLocationGroupsByDistrict rpc failed", logkit.Any("req", req), logkit.Err(err))
-	logkit.FromContext(traceCtx).Info("infolog")
+	//defer logkit.Sync()
+	//type request struct {
+	//	A int
+	//}
+	//req := request{
+	//	A: 1,
+	//}
+	//traceCtx := logkit.NewContextWith(context.Background(), trace.FieldRequestID("22"), trace.FieldTraceID("333"))
+	//err := fmt.Errorf("lxlerr")
+	////logger := logkit.FromContext(traceCtx).With(logkit.Err(err))
+	//logkit.FromContext(traceCtx).Error("AreaModule.BatchGetLocationGroupsByDistrict rpc failed", logkit.Any("req", req), logkit.Err(err))
+	//logkit.FromContext(traceCtx).Info("infolog")
 	//
 	// server:1.继承了requeset会自动调用validate等方法 2.自动绑定request 3.自动生成一个可以复现的curl命令 4.自动生成接口文档
 	// 5.query携带了_show_request_id，那么就会返回requestid 6.提供了pprof 7.提供了捕捉panic的选项
-
+	cmd.Execute()
 }

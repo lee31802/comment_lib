@@ -62,6 +62,7 @@ var (
 
 func init() {
 	s = newGinService()
+	debugPrint(fmt.Sprintf("init:%+v", s))
 	Config = s.config
 	Env = s.environ
 	Opts = s.opts
