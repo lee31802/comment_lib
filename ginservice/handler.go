@@ -131,14 +131,14 @@ func addHandlerInfo(method, path string, handler Handler, middlewares []gin.Hand
 }
 
 func parseRequestTypeFields(t reflect.Type, method string, p string) *requestInfo {
-	host := "127.0.0.1"
-	if port := os.Getenv("PORT"); port != "" {
-		host += ":" + port
+	serviceHost := "127.0.0.1"
+	if servicePort := os.Getenv("PORT"); servicePort != "" {
+		serviceHost += ":" + servicePort
 	}
-	path := path.Join(s.opts.RootPath, p)
-	url := url.URL{
+	servicePath := path.Join(s.opts.RootPath, p)
+	serviceUrl := url.URL{
 		Scheme: "http",
-		Host:   host,
+		Host:   serviceHost,
 	}
 	var fieldInfos []*requestFieldInfo
 	jsons := make(map[string]interface{})
@@ -154,7 +154,7 @@ func parseRequestTypeFields(t reflect.Type, method string, p string) *requestInf
 		}
 		if val, ok := typeField.Tag.Lookup("path"); ok {
 			// 构建一个可执行的curl命令
-			path = strings.Replace(path, ":"+val, "1", -1)
+			servicePath = strings.Replace(servicePath, ":"+val, "1", -1)
 			info.Required = true
 		} else if val, ok = typeField.Tag.Lookup("json"); ok {
 			jsons[val] = newReqInstance(typeField.Type)
@@ -162,14 +162,14 @@ func parseRequestTypeFields(t reflect.Type, method string, p string) *requestInf
 				info.Required = true
 			}
 		} else if val, ok = typeField.Tag.Lookup("query"); ok {
-			q := url.Query()
+			q := serviceUrl.Query()
 			q.Set(val, "1")
-			url.RawQuery = q.Encode()
+			serviceUrl.RawQuery = q.Encode()
 		}
 		fieldInfos = append(fieldInfos, info)
 	}
-	url.Path = path
-	curlString := fmt.Sprintf("curl -X%v '%v'", method, url.String())
+	serviceUrl.Path = servicePath
+	curlString := fmt.Sprintf("curl -X%v '%v'", method, serviceUrl.String())
 	if len(jsons) > 0 {
 		if buf, err := json.Marshal(&jsons); err == nil {
 			curlString += fmt.Sprintf(" -H 'Content-Type: application/json' -d '%v'", string(buf))
