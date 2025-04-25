@@ -43,14 +43,14 @@ func (m *RatingModule) GetDriverTags(ctx context.Context) ginservice.Response {
 
 type QueryStoreRatingReq struct {
 	ginservice.Request
-	StoreID  *uint64 `path:"store_id"`
+	StoreID  *uint64 `path:"store_id" description:"stpreid"`
 	LastID   *uint64 `json:"last_id"`
 	PageSize *uint32 `json:"page_size"`
 	Base     req     `json:"base"`
 }
 
 type req struct {
-	Id int  `json:"id"`
+	Id int  `json:"id" description:"id"`
 	Ac resp `json:"ac"`
 }
 

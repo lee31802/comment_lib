@@ -47,16 +47,18 @@ type responseInfo struct {
 }
 
 type requestFieldInfo struct {
-	Name     string
-	Typ      string
-	Tag      string
-	Required bool
+	Name        string
+	Typ         string
+	Tag         string
+	Required    bool
+	Description string
 }
 
 type responseFieldInfo struct {
-	Name string
-	Typ  string
-	Tag  string
+	Name        string
+	Typ         string
+	Tag         string
+	Description string
 }
 
 // simplify handlerName, only keep module name and method name
@@ -78,11 +80,27 @@ func addHandlerInfo(method, path string, handler Handler, middlewares []gin.Hand
 	ht := reflect.TypeOf(handler)
 	fmt.Printf(":%v", ht.NumOut())
 	withResponse := false
+	var responseTyp reflect.Type
+
 	switch ht.NumOut() {
 	case 1:
+		outTyp := ht.Out(0)
+		if outTyp.Implements(reflect.TypeOf((*Response)(nil)).Elem()) {
+			withResponse = true
+			if outTyp.Kind() == reflect.Ptr {
+				outTyp = outTyp.Elem()
+			}
+			responseTyp = outTyp
+		}
 	case 3:
 		withResponse = true
+		outTyp := ht.Out(2)
+		if outTyp.Kind() == reflect.Ptr {
+			outTyp = outTyp.Elem()
+		}
+		responseTyp = outTyp
 	}
+
 	// main.(*testModule).testFunc-fm
 	handlerName := runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name()
 	s := strings.Split(handlerName, ".")
@@ -95,40 +113,38 @@ func addHandlerInfo(method, path string, handler Handler, middlewares []gin.Hand
 	pathHandlerMap[info.Method+":"+info.URL] = getHandlerSimpleName(handlerName)
 	t := reflect.TypeOf(handler)
 	fmt.Printf(":%v", t.NumIn())
+
+	// 处理 response 信息，不依赖于 request 是否存在
+	if withResponse && responseTyp != nil && responseTyp.Kind() == reflect.Struct {
+		response := &responseInfo{}
+		var infos []*responseFieldInfo
+		for j := 0; j < responseTyp.NumField(); j++ {
+			typeField := responseTyp.Field(j)
+			// 确保字段是导出的（首字母大写）
+			if typeField.IsExported() {
+				infos = append(infos, &responseFieldInfo{
+					Name: typeField.Name,
+					Typ:  typeField.Type.String(),
+					Tag:  fmt.Sprintf("%v", typeField.Tag),
+				})
+			}
+		}
+		response.FieldInfos = infos
+		info.Response = response
+	}
+
+	// 处理 request 信息
 	for i := 0; i < t.NumIn(); i++ {
 		if t.In(i).Implements(reflect.TypeOf((*ServiceRequest)(nil)).Elem()) {
 			// 根据传入的反射类型 t 创建一个对应的实例
 			if req := newReqInstance(t.In(i)); req != nil {
-				if withResponse {
-					response := &responseInfo{}
-					responseValue := reflect.New(ht.Out(2))
-					if responseValue.Kind() == reflect.Ptr && reflect.TypeOf(responseValue.Elem().Interface()) != nil {
-						responseValue = responseValue.Elem()
-					}
-					responseTyp := reflect.TypeOf(responseValue.Interface())
-					if responseTyp.Kind() == reflect.Ptr {
-						responseTyp = responseTyp.Elem()
-					}
-					if responseTyp.Kind() == reflect.Struct {
-						var infos []*responseFieldInfo
-						for j := 0; j < responseTyp.NumField(); j++ {
-							typeField := responseTyp.Field(j)
-							infos = append(infos, &responseFieldInfo{
-								Name: typeField.Name,
-								Typ:  typeField.Type.String(),
-								Tag:  fmt.Sprintf("%v", typeField.Tag),
-							})
-						}
-						response.FieldInfos = infos
-					}
-					info.Response = response
-				}
 				reqTyp := reflect.TypeOf(req).Elem()
 				request := parseRequestTypeFields(reqTyp, method, path)
 				info.Request = request
 			}
 		}
 	}
+
 	globalHandlerInfos = append(globalHandlerInfos, info)
 	return info
 }
@@ -180,6 +196,10 @@ func parseRequestTypeFields(t reflect.Type, method string, p string) *requestInf
 				q := serviceUrl.Query()
 				q.Set(val, "1")
 				serviceUrl.RawQuery = q.Encode()
+			}
+			// 提取 description 信息
+			if desc, ok := typeField.Tag.Lookup("description"); ok {
+				info.Description = desc
 			}
 			fieldInfos = append(fieldInfos, info)
 		}

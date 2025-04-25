@@ -12,59 +12,40 @@ const apiDoc = `
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
     <style>
-       .api-content {
+        .api-content {
             display: none;
         }
 
-       .title {
-            color: #374151;
-            font-weight: 700;
-            font-size: 2.25rem;
-            line-height: 2.5rem;
-            margin-bottom: 1.5rem;
+        .title {
+            @apply text-3xl font-bold text-blue-600 mb-6;
         }
 
-       .subtitle {
-            color: #6B7280;
-            font-weight: 600;
-            font-size: 1.5rem;
-            line-height: 2rem;
-            margin-bottom: 1rem;
+        .subtitle {
+            @apply text-2xl font-bold text-gray-800 mb-4;
         }
 
-       .section-title {
-            color: #374151;
-            font-weight: 600;
-            font-size: 1.25rem;
-            line-height: 1.75rem;
-            margin-bottom: 0.75rem;
+        .section-title {
+            @apply text-xl font-bold text-gray-700 mb-3;
         }
 
-       .table {
-            width: 100%;
-            border-collapse: collapse;
+        .table {
+            @apply w-full border-collapse;
         }
 
-       .table th,
-       .table td {
-            border: 1px solid #E5E7EB;
-            padding: 0.5rem 1rem;
+        .table th,
+        .table td {
+            @apply border border-gray-300 p-2;
         }
 
-       .table th {
-            background-color: #F3F4F6;
-            text-align: left;
-            font-weight: 600;
+        .table th {
+            @apply bg-gray-100 text-left font-bold;
         }
 
-       .json-sample {
-            background-color: #F9FAFB;
-            border-radius: 0.375rem;
-            padding: 1rem;
-            overflow-x: auto;
+        .json-sample {
+            @apply bg-gray-50 p-4 rounded-md overflow-x-auto;
         }
 
-       .fade-in {
+        .fade-in {
             animation: fadeIn 0.5s ease-in-out;
         }
 
@@ -98,26 +79,30 @@ const apiDoc = `
             <p class="text-gray-600 mb-2">Name: {{$api.Request.Name}}</p>
             <p class="text-gray-600 mb-2">PkgPath: {{$api.Request.PkgPath}}</p>
             <p class="text-gray-600 mb-4">Curl: <code>{{$api.Request.CurlString}}</code></p>
-            <table class="table mb-6">
-                <thead>
-                    <tr>
-                        <th class="text-left">Field Name</th>
-                        <th class="text-left">Type</th>
-                        <th class="text-left">Required</th>
-                        <th class="text-left">Tag</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{range $api.Request.FieldInfos}}
-                    <tr>
-                        <td>{{.Name}}</td>
-                        <td>{{.Typ}}</td>
-                        <td>{{.Required}}</td>
-                        <td>{{.Tag}}</td>
-                    </tr>
-                    {{end}}
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="table mb-6">
+                    <thead>
+                        <tr>
+                            <th class="text-left">Field Name</th>
+                            <th class="text-left">Type</th>
+                            <th class="text-left">Required</th>
+                            <th class="text-left">Tag</th>
+                            <th class="text-left">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $api.Request.FieldInfos}}
+                        <tr>
+                            <td>{{.Name}}</td>
+                            <td>{{.Typ}}</td>
+                            <td>{{.Required}}</td>
+                            <td>{{.Tag}}</td>
+                            <td class="whitespace-normal">{{.Description}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
             <h4 class="section-title">Request JSON 样例</h4>
             <pre class="json-sample" id="request-json-sample-{{$index}}"></pre>
             <script>
@@ -142,27 +127,31 @@ const apiDoc = `
             {{end}}
             {{if $api.Response}}
             <h3 class="section-title">Response</h3>
-            <table class="table mb-6">
-                <thead>
-                    <tr>
-                        <th class="text-left">Field Name</th>
-                        <th class="text-left">Type</th>
-                        <th class="text-left">Tag</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{range $api.Response.FieldInfos}}
-                    <tr>
-                        <td>{{.Name}}</td>
-                        <td>{{.Typ}}</td>
-                        <td>{{.Tag}}</td>
-                    </tr>
-                    {{end}}
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="table mb-6">
+                    <thead>
+                        <tr>
+                            <th class="text-left">Field Name</th>
+                            <th class="text-left">Type</th>
+                            <th class="text-left">Tag</th>
+                            <th class="text-left">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range $api.Response.FieldInfos}}
+                        <tr>
+                            <td>{{.Name}}</td>
+                            <td>{{.Typ}}</td>
+                            <td>{{.Tag}}</td>
+                            <td class="whitespace-normal">{{.Description}}</td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
             <h4 class="section-title">Response JSON 样例</h4>
             <pre class="json-sample" id="response-json-sample-{{$index}}"></pre>
-            
+           
             {{else}}
             <p class="text-gray-600 mb-4">无响应参数</p>
             {{end}}
@@ -184,5 +173,5 @@ const apiDoc = `
     </script>
 </body>
 
-</html>
+</html>    
 `
