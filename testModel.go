@@ -7,13 +7,13 @@ import (
 	"net/http"
 )
 
-type RatingModule struct {
+type Module struct {
 	client Client
 }
 
 type GetTagsResponse struct {
-	RatingStarToTags []string `json:"rating_star_to_tags"`
-	Id               int      `json:"id"`
+	Tags []string `json:"rating_star_to_tags"`
+	Id   int      `json:"id"`
 }
 
 type Resp struct {
@@ -22,7 +22,7 @@ type Resp struct {
 	User GetTagsResponse `json:"user"`
 }
 
-type QueryStoreRatingReq struct {
+type Req struct {
 	ginserver.Request
 	StoreID  int     `path:"store_id" desc:"stpreid"`
 	LastID   *uint64 `json:"last_id"`
@@ -36,33 +36,33 @@ type req struct {
 }
 
 type Client interface {
-	GetDriverTags(ctx context.Context, in *GetDriverTagsRequest) (*GetTagsResponse, error)
-	QueryStoreRatingV2(ctx context.Context, in *QueryStoreRatingReq) (*Resp, error)
+	GetTags(ctx context.Context, in *GetDriverTagsRequest) (*GetTagsResponse, error)
+	Query(ctx context.Context, in *Req) (*Resp, error)
 }
 type GetDriverTagsRequest struct {
 }
 
-func NewRatingModule() *RatingModule {
-	return &RatingModule{}
+func NewRatingModule() *Module {
+	return &Module{}
 }
-func (m *RatingModule) Init(r ginserver.Router) {
+func (m *Module) Init(r ginserver.Router) {
 	group := r.Group("api/buyer/rating")
 	{
-		group.GET("/tags/driver", m.GetDriverTags)
-		group.POST("/store/:store_id/store-rating/action/listing", m.QueryStoreRatingV2)
+		group.GET("/test", m.GetDriverTags)
+		group.POST("/test/:store_id/listing", m.QueryStoreRatingV2)
 	}
 }
 
-func (req *QueryStoreRatingReq) Validate() errors.Error {
+func (req *Req) Validate() errors.Error {
 	if req.StoreID == 0 || req.LastID == nil {
 		return errors.ErrorParamsInvalid
 	}
 	return nil
 }
 
-func (m *RatingModule) QueryStoreRatingV2(ctx context.Context, req *QueryStoreRatingReq) ginserver.Response {
+func (m *Module) QueryStoreRatingV2(ctx context.Context, req *Req) ginserver.Response {
 	getTagsResp := GetTagsResponse{
-		RatingStarToTags: []string{"llllxxx"},
+		Tags: []string{"llllxxx"},
 	}
 
 	return ginserver.JSONResponse(http.StatusOK, errors.Success, Resp{
@@ -72,12 +72,6 @@ func (m *RatingModule) QueryStoreRatingV2(ctx context.Context, req *QueryStoreRa
 	})
 }
 
-func (m *RatingModule) GetDriverTags(ctx context.Context) string {
-
-	//getTagsResp := &GetTagsResponse{
-	//	Id:               11,
-	//	RatingStarToTags: []string{"llll"},
-	//}
-
+func (m *Module) GetDriverTags(ctx context.Context) string {
 	return "success"
 }
