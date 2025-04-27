@@ -8,6 +8,37 @@ import (
 )
 
 type RatingModule struct {
+	client Client
+}
+
+type GetTagsResponse struct {
+	RatingStarToTags []string `json:"rating_star_to_tags"`
+	Id               int      `json:"id"`
+}
+
+type Resp struct {
+	Id   int             `json:"id"`
+	User GetTagsResponse `json:"user"`
+}
+
+type QueryStoreRatingReq struct {
+	ginservice.Request
+	StoreID  uint64  `path:"store_id" desc:"stpreid"`
+	LastID   *uint64 `json:"last_id"`
+	PageSize *uint32 `json:"page_size"`
+	Base     req     `json:"base"`
+}
+
+type req struct {
+	Id int  `json:"id" desc:"id"`
+	Ac Resp `json:"ac"`
+}
+
+type Client interface {
+	GetDriverTags(ctx context.Context, in *GetDriverTagsRequest) (*GetTagsResponse, error)
+	QueryStoreRatingV2(ctx context.Context, in *QueryStoreRatingReq) (*Resp, error)
+}
+type GetDriverTagsRequest struct {
 }
 
 func NewRatingModule() *RatingModule {
@@ -21,46 +52,23 @@ func (m *RatingModule) Init(r ginservice.Router) {
 	}
 }
 
-type GetTagsResponse struct {
-	RatingStarToTags []string `json:"rating_star_to_tags"`
-	Id               int      `json:"id"`
-}
-
-type resp struct {
-	Id   int             `json:"id"`
-	User GetTagsResponse `json:"user"`
-}
-
-func (m *RatingModule) GetDriverTags(ctx context.Context) ginservice.Response {
-
-	getTagsResp := &GetTagsResponse{
-		Id:               11,
-		RatingStarToTags: []string{"llll"},
-	}
-
-	return ginservice.JSONResponse(http.StatusOK, errors.Success, getTagsResp)
-}
-
-type QueryStoreRatingReq struct {
-	ginservice.Request
-	StoreID  *uint64 `path:"store_id" description:"stpreid"`
-	LastID   *uint64 `json:"last_id"`
-	PageSize *uint32 `json:"page_size"`
-	Base     req     `json:"base"`
-}
-
-type req struct {
-	Id int  `json:"id" description:"id"`
-	Ac resp `json:"ac"`
-}
-
 func (m *RatingModule) QueryStoreRatingV2(ctx context.Context, req *QueryStoreRatingReq) ginservice.Response {
 	getTagsResp := GetTagsResponse{
 		RatingStarToTags: []string{"llllxxx"},
 	}
 
-	return ginservice.JSONResponse(http.StatusOK, errors.Success, resp{
+	return ginservice.JSONResponse(http.StatusOK, errors.Success, Resp{
 		User: getTagsResp,
 		Id:   16,
 	})
+}
+
+func (m *RatingModule) GetDriverTags(ctx context.Context) string {
+
+	//getTagsResp := &GetTagsResponse{
+	//	Id:               11,
+	//	RatingStarToTags: []string{"llll"},
+	//}
+
+	return "success"
 }

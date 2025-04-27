@@ -2,6 +2,7 @@ package ginservice
 
 import (
 	"context"
+	"fmt"
 	"github.com/lee31802/comment_lib/constants"
 	"github.com/lee31802/comment_lib/errors"
 	"github.com/lee31802/comment_lib/logkit"
@@ -110,15 +111,13 @@ func newReqInstance(t reflect.Type) interface{} {
 	if t == nil {
 		return nil
 	}
+	fmt.Printf("%v\n", t.Kind())
 	switch t.Kind() {
 	case reflect.Ptr:
 		return newReqInstance(t.Elem())
 	case reflect.Interface:
 		return nil
 	case reflect.Slice:
-		if t.Elem().Kind() == reflect.String {
-			return []string{"default_string_value"}
-		}
 		return reflect.MakeSlice(t, 0, 0).Interface()
 	case reflect.Array:
 		v := reflect.New(t).Elem()
@@ -134,7 +133,57 @@ func newReqInstance(t reflect.Type) interface{} {
 		m := reflect.MakeMap(t)
 		return m.Interface()
 	case reflect.String:
-		return "default_string"
+		return "default"
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return int64(0)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return uint64(0)
+	case reflect.Float32, reflect.Float64:
+		return float64(0)
+	case reflect.Bool:
+		return false
+	default:
+		return reflect.New(t).Interface()
+	}
+}
+
+func newRespInstance(t reflect.Type) interface{} {
+	if t == nil {
+		return nil
+	}
+	fmt.Printf("%v\n", t.Kind())
+	switch t.Kind() {
+	case reflect.Ptr:
+		return newRespInstance(t.Elem())
+	case reflect.Interface:
+		if t.NumMethod() == 0 {
+			// 如果是没有方法的空接口，返回一个空结构体实例
+			return struct{}{}
+		}
+		// 处理 Response 接口
+		if t.Implements(reflect.TypeOf((*Response)(nil)).Elem()) {
+			// 创建一个 jsonResponse 实例
+			return &jsonResponse{}
+		}
+		// 这里可以根据具体接口要求创建更合适的实现，暂时返回 nil
+		return nil
+	case reflect.Slice:
+		return reflect.MakeSlice(t, 0, 0).Interface()
+	case reflect.Array:
+		v := reflect.New(t).Elem()
+		for i := 0; i < v.Len(); i++ {
+			element := v.Index(i)
+			elementValue := reflect.ValueOf(newRespInstance(element.Type()))
+			if elementValue.IsValid() && elementValue.Type().AssignableTo(element.Type()) {
+				element.Set(elementValue)
+			}
+		}
+		return v.Interface()
+	case reflect.Map:
+		m := reflect.MakeMap(t)
+		return m.Interface()
+	case reflect.String:
+		return "default"
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return int64(0)
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:

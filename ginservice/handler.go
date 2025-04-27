@@ -42,7 +42,6 @@ type requestInfo struct {
 }
 
 type responseInfo struct {
-	Desc       string
 	FieldInfos []*responseFieldInfo
 }
 
@@ -77,30 +76,6 @@ func getHandlerSimpleName(handlerName string) string {
 
 // addHandlerInfo 函数通过反射机制，收集和整理了处理函数的名称、请求方法、请求路径、输入参数和输出响应的相关信息，并将这些信息存储到 handlerInfo 结构体中，同时更新了一些全局的映射和列表。
 func addHandlerInfo(method, path string, handler Handler, middlewares []gin.HandlerFunc) *handlerInfo {
-	ht := reflect.TypeOf(handler)
-	fmt.Printf(":%v", ht.NumOut())
-	withResponse := false
-	var responseTyp reflect.Type
-
-	switch ht.NumOut() {
-	case 1:
-		outTyp := ht.Out(0)
-		if outTyp.Implements(reflect.TypeOf((*Response)(nil)).Elem()) {
-			withResponse = true
-			if outTyp.Kind() == reflect.Ptr {
-				outTyp = outTyp.Elem()
-			}
-			responseTyp = outTyp
-		}
-	case 3:
-		withResponse = true
-		outTyp := ht.Out(2)
-		if outTyp.Kind() == reflect.Ptr {
-			outTyp = outTyp.Elem()
-		}
-		responseTyp = outTyp
-	}
-
 	// main.(*testModule).testFunc-fm
 	handlerName := runtime.FuncForPC(reflect.ValueOf(handler).Pointer()).Name()
 	s := strings.Split(handlerName, ".")
@@ -114,25 +89,6 @@ func addHandlerInfo(method, path string, handler Handler, middlewares []gin.Hand
 	t := reflect.TypeOf(handler)
 	fmt.Printf(":%v", t.NumIn())
 
-	// 处理 response 信息，不依赖于 request 是否存在
-	if withResponse && responseTyp != nil && responseTyp.Kind() == reflect.Struct {
-		response := &responseInfo{}
-		var infos []*responseFieldInfo
-		for j := 0; j < responseTyp.NumField(); j++ {
-			typeField := responseTyp.Field(j)
-			// 确保字段是导出的（首字母大写）
-			if typeField.IsExported() {
-				infos = append(infos, &responseFieldInfo{
-					Name: typeField.Name,
-					Typ:  typeField.Type.String(),
-					Tag:  fmt.Sprintf("%v", typeField.Tag),
-				})
-			}
-		}
-		response.FieldInfos = infos
-		info.Response = response
-	}
-
 	// 处理 request 信息
 	for i := 0; i < t.NumIn(); i++ {
 		if t.In(i).Implements(reflect.TypeOf((*ServiceRequest)(nil)).Elem()) {
@@ -144,9 +100,58 @@ func addHandlerInfo(method, path string, handler Handler, middlewares []gin.Hand
 			}
 		}
 	}
+	fmt.Printf("%v", t.NumOut())
+	for i := 0; i < t.NumOut(); i++ {
+		if t.Out(i).Implements(reflect.TypeOf((*Response)(nil)).Elem()) {
+			// 根据传入的反射类型 t 创建一个对应的实例
+			if resp := newRespInstance(t.Out(i)); resp != nil {
+				respTyp := reflect.TypeOf(resp).Elem()
+				response := parseResponseTypeFields(respTyp)
+				info.Response = response
+			}
+		}
+	}
 
 	globalHandlerInfos = append(globalHandlerInfos, info)
 	return info
+}
+
+func parseResponseTypeFields(t reflect.Type) *responseInfo {
+	var fieldInfos []*responseFieldInfo
+	jsons := make(map[string]interface{})
+	var buildJSON func(t reflect.Type, parentKey string, jsons map[string]interface{})
+	buildJSON = func(t reflect.Type, parentKey string, jsons map[string]interface{}) {
+		for i := 0; i < t.NumField(); i++ {
+			typeField := t.Field(i)
+			key := typeField.Name
+			if parentKey != "" {
+				key = parentKey + "." + key
+			}
+			info := &responseFieldInfo{
+				Name: key,
+				Typ:  typeField.Type.String(),
+				Tag:  fmt.Sprintf("%v", typeField.Tag),
+			}
+			if val, ok := typeField.Tag.Lookup("json"); ok {
+				if typeField.Type.Kind() == reflect.Struct {
+					subJsons := make(map[string]interface{})
+					buildJSON(typeField.Type, key, subJsons)
+					jsons[val] = subJsons
+				} else {
+					jsons[val] = newReqInstance(typeField.Type)
+				}
+			}
+			// 提取 desc 信息
+			if desc, ok := typeField.Tag.Lookup("desc"); ok {
+				info.Description = desc
+			}
+			fieldInfos = append(fieldInfos, info)
+		}
+	}
+	buildJSON(t, "", jsons)
+	return &responseInfo{
+		FieldInfos: fieldInfos,
+	}
 }
 
 func parseRequestTypeFields(t reflect.Type, method string, p string) *requestInfo {
@@ -197,8 +202,8 @@ func parseRequestTypeFields(t reflect.Type, method string, p string) *requestInf
 				q.Set(val, "1")
 				serviceUrl.RawQuery = q.Encode()
 			}
-			// 提取 description 信息
-			if desc, ok := typeField.Tag.Lookup("description"); ok {
+			// 提取 desc 信息
+			if desc, ok := typeField.Tag.Lookup("desc"); ok {
 				info.Description = desc
 			}
 			fieldInfos = append(fieldInfos, info)
