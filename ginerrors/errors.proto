@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package errors;
-
-message PbRPCError {
+package ginerrors;
+// protoc --go_out=./ --go_opt=Mginerrors/errors.proto=./ginerrors ginerrors/errors.proto
+message GinError {
     int32 code = 1;
     string msg = 2;
 }
