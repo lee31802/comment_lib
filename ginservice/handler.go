@@ -87,7 +87,6 @@ func addHandlerInfo(method, path string, handler Handler, middlewares []gin.Hand
 	}
 	pathHandlerMap[info.Method+":"+info.URL] = getHandlerSimpleName(handlerName)
 	t := reflect.TypeOf(handler)
-	fmt.Printf(":%v", t.NumIn())
 
 	// 处理 request 信息
 	for i := 0; i < t.NumIn(); i++ {
@@ -100,7 +99,7 @@ func addHandlerInfo(method, path string, handler Handler, middlewares []gin.Hand
 			}
 		}
 	}
-	fmt.Printf("%v", t.NumOut())
+
 	for i := 0; i < t.NumOut(); i++ {
 		if t.Out(i).Implements(reflect.TypeOf((*Response)(nil)).Elem()) {
 			// 根据传入的反射类型 t 创建一个对应的实例
