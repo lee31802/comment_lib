@@ -247,8 +247,11 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 			c.Set(constants.CtxKeyRequestID, rid)
 		}
 		traceCtx := trace.NewContextWithRequestID(c, rid)
+		fmt.Printf("convert handler ctx:%v", traceCtx)
 		traceCtx = trace.NewContextWithTraceID(traceCtx, traceId)
+		fmt.Printf("convert handler ctx:%v", traceCtx)
 		traceCtx = logkit.NewContextWith(traceCtx, trace.FieldTraceID(traceId), trace.FieldRequestID(rid))
+		fmt.Printf("convert handler ctx:%v", traceCtx)
 		gwCtx := &constants.Context{
 			Context: traceCtx,
 			GinCtx:  c,

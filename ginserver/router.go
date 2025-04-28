@@ -256,6 +256,7 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 			handlerName = runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
 		}
 		c.Set(constants.CtxKeyHandlerName, handlerName)
+		// 使用依赖注入，解耦。无需关系参数的构建过程
 		injector := inject.New()
 		if parentInjector != nil {
 			injector.SetParent(parentInjector)

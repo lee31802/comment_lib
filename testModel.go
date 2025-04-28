@@ -77,6 +77,6 @@ func (m *Module) QueryStoreRatingV2(ctx context.Context, req *Req) ginserver.Res
 	})
 }
 
-func (m *Module) GetDriverTags(ctx context.Context) string {
-	return "success"
+func (m *Module) GetDriverTags(ctx context.Context) ginserver.Response {
+	return ginserver.JSONResponse(http.StatusOK, ginerrors.Success, "sucess")
 }
