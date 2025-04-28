@@ -2,7 +2,6 @@ package ginserver
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/lee31802/comment_lib/constants"
 	"github.com/lee31802/comment_lib/ginerrors"
@@ -271,16 +270,18 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 					return
 				}
 				gr := req.(ServiceRequest)
-				if err := gr.Parse(c); err != nil && errors.Is(err, ginerrors.Success) {
+				if err := gr.Parse(c); err != nil && err != ginerrors.Success {
 					logkit.FromContext(traceCtx).Error("Parse request failed", logkit.Err(err), logkit.Any("req", req))
 					c.AbortWithStatusJSON(http.StatusBadRequest, &jsonResponseData{ErrCode: err.GetCode(), ErrMsg: err.GetMsg()})
 					return
 				}
-				if err := gr.Validate(); err != nil && !errors.Is(err, ginerrors.Success) {
+
+				if err := gr.Validate(); err != nil && err != ginerrors.Success {
 					logkit.FromContext(traceCtx).Error("Validate request failed", logkit.Err(err), logkit.Any("req", req))
 					c.AbortWithStatusJSON(http.StatusBadRequest, &jsonResponseData{ErrCode: err.GetCode(), ErrMsg: err.GetMsg()})
 					return
 				}
+
 				injector.Map(req)
 			}
 		}
