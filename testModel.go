@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/lee31802/comment_lib/errors"
+	"github.com/lee31802/comment_lib/ginerrors"
 	"github.com/lee31802/comment_lib/ginserver"
 	"net/http"
 )
@@ -53,9 +53,9 @@ func (m *Module) Init(r ginserver.Router) {
 	}
 }
 
-func (req *Req) Validate() errors.Error {
+func (req *Req) Validate() ginerrors.Error {
 	if req.StoreID == 0 || req.LastID == nil {
-		return errors.ErrorParamsInvalid
+		return ginerrors.ErrorParamsInvalid
 	}
 	return nil
 }
@@ -65,7 +65,7 @@ func (m *Module) QueryStoreRatingV2(ctx context.Context, req *Req) ginserver.Res
 		Tags: []string{"llllxxx"},
 	}
 
-	return ginserver.JSONResponse(http.StatusOK, errors.Success, Resp{
+	return ginserver.JSONResponse(http.StatusOK, ginerrors.Success, Resp{
 		User: getTagsResp,
 		Id:   req.StoreID,
 		Last: req.LastID,

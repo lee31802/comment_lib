@@ -1,4 +1,4 @@
-package errors
+package ginerrors
 
 // Error definitions
 var (

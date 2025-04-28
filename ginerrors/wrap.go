@@ -1,4 +1,4 @@
-package errors
+package ginerrors
 
 import (
 	"fmt"
@@ -79,15 +79,15 @@ var errorType = reflect.TypeOf((*error)(nil)).Elem()
 
 func As(err error, target interface{}) bool {
 	if target == nil {
-		panic("errors: target cannot be nil")
+		panic("ginerrors: target cannot be nil")
 	}
 	val := reflect.ValueOf(target)
 	typ := val.Type()
 	if typ.Kind() != reflect.Ptr || val.IsNil() {
-		panic("errors: target must be a non-nil pointer")
+		panic("ginerrors: target must be a non-nil pointer")
 	}
 	if e := typ.Elem(); e.Kind() != reflect.Interface && !e.Implements(errorType) {
-		panic("errors: *target must be interface or implement error")
+		panic("ginerrors: *target must be interface or implement error")
 	}
 	targetType := typ.Elem()
 	for err != nil {

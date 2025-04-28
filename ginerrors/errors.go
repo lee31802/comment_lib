@@ -1,4 +1,4 @@
-package errors
+package ginerrors
 
 import (
 	"encoding/json"

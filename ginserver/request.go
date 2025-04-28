@@ -2,7 +2,7 @@ package ginserver
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/lee31802/comment_lib/errors"
+	"github.com/lee31802/comment_lib/ginerrors"
 	"reflect"
 )
 
@@ -15,18 +15,18 @@ const (
 type Request struct{}
 
 // Parse parses request from gin context.
-func (r *Request) Parse(c *gin.Context) errors.Error {
-	return errors.Success
+func (r *Request) Parse(c *gin.Context) ginerrors.Error {
+	return ginerrors.Success
 }
 
 // Validate checks the validation of the request.
-func (r *Request) Validate() errors.Error {
-	return errors.Success
+func (r *Request) Validate() ginerrors.Error {
+	return ginerrors.Success
 }
 
 type ServiceRequest interface {
-	Parse(*gin.Context) errors.Error
-	Validate() errors.Error
+	Parse(*gin.Context) ginerrors.Error
+	Validate() ginerrors.Error
 }
 
 type requestParser struct {
@@ -40,11 +40,11 @@ func newRequestParser(req interface{}) *requestParser {
 	}
 }
 
-func (rp *requestParser) parse(c *gin.Context) errors.Error {
+func (rp *requestParser) parse(c *gin.Context) ginerrors.Error {
 	rp.err = c.ShouldBind(rp.req)
 	rp.bindContext(c, rp.req)
 	if rp.err != nil {
-		return errors.ErrorParseRequest
+		return ginerrors.ErrorParseRequest
 	}
 	return nil
 }

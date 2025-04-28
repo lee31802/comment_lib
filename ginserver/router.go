@@ -2,9 +2,10 @@ package ginserver
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/lee31802/comment_lib/constants"
-	"github.com/lee31802/comment_lib/errors"
+	"github.com/lee31802/comment_lib/ginerrors"
 	"github.com/lee31802/comment_lib/logkit"
 	"github.com/lee31802/comment_lib/trace"
 	"net/http"
@@ -204,7 +205,7 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 	}
 	// 返回值数量为 0：不做额外检查。
 	// 返回值数量为 1：检查返回值类型是否为 string 或者实现了 Response 接口。如果不满足条件，触发 panic。
-	// 返回值数量为 3：检查第一个返回值类型是否为 int(httpcode)，第二个返回值是否实现了 errors.Error 接口。如果不满足条件，触发 panic。
+	// 返回值数量为 3：检查第一个返回值类型是否为 int(httpcode)，第二个返回值是否实现了 ginerrors.Error 接口。如果不满足条件，触发 panic。
 	// 其他返回值数量：触发 panic。
 	switch t.NumOut() {
 	case 0:
@@ -217,7 +218,7 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 		if codeTyp := t.Out(0); codeTyp.Kind() != reflect.Int {
 			panic("handler first parameter type should be `int`")
 		}
-		if errTyp := t.Out(1); !errTyp.Implements(reflect.TypeOf((*errors.Error)(nil)).Elem()) {
+		if errTyp := t.Out(1); !errTyp.Implements(reflect.TypeOf((*ginerrors.Error)(nil)).Elem()) {
 			panic("handler second parameter type should be `gerrors.Error`")
 		}
 	default:
@@ -270,12 +271,12 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 					return
 				}
 				gr := req.(ServiceRequest)
-				if err := gr.Parse(c); err != nil && err != errors.Success {
+				if err := gr.Parse(c); err != nil && errors.Is(err, ginerrors.Success) {
 					logkit.FromContext(traceCtx).Error("Parse request failed", logkit.Err(err), logkit.Any("req", req))
 					c.AbortWithStatusJSON(http.StatusBadRequest, &jsonResponseData{ErrCode: err.GetCode(), ErrMsg: err.GetMsg()})
 					return
 				}
-				if err := gr.Validate(); err != nil && err != errors.Success {
+				if err := gr.Validate(); err != nil && !errors.Is(err, ginerrors.Success) {
 					logkit.FromContext(traceCtx).Error("Validate request failed", logkit.Err(err), logkit.Any("req", req))
 					c.AbortWithStatusJSON(http.StatusBadRequest, &jsonResponseData{ErrCode: err.GetCode(), ErrMsg: err.GetMsg()})
 					return
@@ -303,7 +304,7 @@ func convertHandler(f Handler, parentInjector inject.Injector) gin.HandlerFunc {
 				c.String(http.StatusOK, i.(string))
 			}
 		case 3:
-			gErr := ret[1].Interface().(errors.Error)
+			gErr := ret[1].Interface().(ginerrors.Error)
 			resp := &jsonResponse{
 				jsonResponseData: jsonResponseData{
 					ErrCode: gErr.GetCode(),

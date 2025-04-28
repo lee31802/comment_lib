@@ -61,7 +61,7 @@ var (
 )
 
 func init() {
-	s = newGinService()
+	s = newGinServer()
 	debugPrint(fmt.Sprintf("init:%+v", s))
 	Config = s.config
 	Env = s.environ
@@ -92,8 +92,8 @@ func (g *ginServer) initBeforeRun() {
 	g.registerSignals()
 }
 
-// newGinService returns a newGinService application instance with given config.
-func newGinService(options ...Option) *ginServer {
+// newGinServer returns a newGinServer application instance with given config.
+func newGinServer(options ...Option) *ginServer {
 	// Default config
 	opts := newOptions()
 	for _, setter := range options {
