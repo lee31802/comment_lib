@@ -11,7 +11,7 @@ type Error interface {
 	GetMsg() string
 }
 
-type err PbRPCError
+type err GinError
 
 func (e *err) Error() string {
 	return fmt.Sprintf("error: code = %d desc = %s", e.GetCode(), e.GetMsg())
