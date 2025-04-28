@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/gin-gonic/gin"
 	"github.com/lee31802/comment_lib/ginerrors"
 	"github.com/lee31802/comment_lib/ginserver"
 	"net/http"
@@ -53,11 +54,15 @@ func (m *Module) Init(r ginserver.Router) {
 	}
 }
 
+func (req *Req) Parse(c *gin.Context) ginerrors.Error {
+	return nil
+}
+
 func (req *Req) Validate() ginerrors.Error {
 	if req.StoreID == 0 || req.LastID == nil {
 		return ginerrors.ErrorParamsInvalid
 	}
-	return nil
+	return ginerrors.Success
 }
 
 func (m *Module) QueryStoreRatingV2(ctx context.Context, req *Req) ginserver.Response {
