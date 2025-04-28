@@ -5,10 +5,10 @@ go 1.23.4
 require (
 	github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0
 	github.com/gin-gonic/gin v1.10.0
-	github.com/golang/protobuf v1.5.4
 	github.com/google/uuid v1.6.0
 	github.com/spf13/viper v1.20.1
 	go.uber.org/zap v1.27.0
+	google.golang.org/protobuf v1.36.1
 )
 
 require (
@@ -45,6 +45,5 @@ require (
 	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
-	google.golang.org/protobuf v1.36.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
