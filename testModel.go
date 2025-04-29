@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/lee31802/comment_lib/ginerrors"
-	"github.com/lee31802/comment_lib/ginserver"
+	"github.com/lee31802/comment_lib/gweb"
 	"net/http"
 )
 
@@ -24,7 +24,7 @@ type Resp struct {
 }
 
 type Req struct {
-	ginserver.Request
+	gweb.Request
 	StoreID  int     `path:"store_id" desc:"stpreid"`
 	LastID   *uint64 `json:"last_id"`
 	PageSize *uint32 `json:"page_size"`
@@ -46,7 +46,7 @@ type GetDriverTagsRequest struct {
 func NewRatingModule() *Module {
 	return &Module{}
 }
-func (m *Module) Init(r ginserver.Router) {
+func (m *Module) Init(r gweb.Router) {
 	group := r.Group("api/buyer/rating")
 	{
 		group.GET("/test", m.GetDriverTags)
@@ -65,18 +65,18 @@ func (req *Req) Validate() ginerrors.Error {
 	return ginerrors.Success
 }
 
-func (m *Module) QueryStoreRatingV2(ctx context.Context, req *Req) ginserver.Response {
+func (m *Module) QueryStoreRatingV2(ctx context.Context, req *Req) gweb.Response {
 	getTagsResp := GetTagsResponse{
 		Tags: []string{"llllxxx"},
 	}
 
-	return ginserver.JSONResponse(http.StatusOK, ginerrors.Success, Resp{
+	return gweb.JSONResponse(http.StatusOK, ginerrors.Success, Resp{
 		User: getTagsResp,
 		Id:   req.StoreID,
 		Last: req.LastID,
 	})
 }
 
-func (m *Module) GetDriverTags(ctx context.Context) ginserver.Response {
-	return ginserver.JSONResponse(http.StatusOK, ginerrors.Success, "sucess")
+func (m *Module) GetDriverTags(ctx context.Context) gweb.Response {
+	return gweb.JSONResponse(http.StatusOK, ginerrors.Success, "sucess")
 }

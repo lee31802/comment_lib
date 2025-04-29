@@ -1,4 +1,4 @@
-package ginserver
+package gweb
 
 import (
 	"github.com/lee31802/comment_lib/ginerrors"

@@ -1,4 +1,4 @@
-package ginserver
+package gweb
 
 import (
 	"encoding/json"
@@ -160,7 +160,7 @@ func parseRequestTypeFields(t reflect.Type, method string, p string) *requestInf
 	} else {
 		serviceHost += ":8080"
 	}
-	servicePath := path.Join(s.opts.RootPath, p)
+	servicePath := path.Join(gw.opts.RootPath, p)
 	serviceUrl := url.URL{
 		Scheme: "http",
 		Host:   serviceHost,
@@ -172,7 +172,7 @@ func parseRequestTypeFields(t reflect.Type, method string, p string) *requestInf
 	buildJSON = func(t reflect.Type, parentKey string, jsons map[string]interface{}) {
 		for i := 0; i < t.NumField(); i++ {
 			typeField := t.Field(i)
-			if typeField.Type.String() == "ginserver.Request" {
+			if typeField.Type.String() == "gweb.Request" {
 				continue
 			}
 			key := typeField.Name
@@ -242,7 +242,7 @@ func parseRequestTypeFields(t reflect.Type, method string, p string) *requestInf
 //	jsons := make(map[string]interface{})
 //	for i := 0; i < t.NumField(); i++ {
 //		typeField := t.Field(i)
-//		if typeField.Type.String() == "ginserver.Request" {
+//		if typeField.Type.String() == "gweb.Request" {
 //			continue
 //		}
 //		info := &requestFieldInfo{

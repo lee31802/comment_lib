@@ -1,4 +1,4 @@
-package ginserver
+package gweb
 
 // Structure to manage groups for commands
 type Group struct {
@@ -18,5 +18,5 @@ type Command struct {
 }
 
 func (cmd Command) Execute() error {
-	return s.Run(cmd)
+	return gw.Run(cmd)
 }

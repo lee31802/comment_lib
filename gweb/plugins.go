@@ -1,4 +1,4 @@
-package ginserver
+package gweb
 
 import (
 	"github.com/codegangsta/inject"

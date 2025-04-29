@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/lee31802/comment_lib/ginserver"
+	"github.com/lee31802/comment_lib/gweb"
 	"github.com/lee31802/comment_lib/logkit"
 )
 
@@ -19,13 +19,13 @@ func init() {
 }
 
 var (
-	cmd = &ginserver.Command{
+	cmd = &gweb.Command{
 		Name: "test",
-		PreRun: func(router ginserver.Router) error {
+		PreRun: func(router gweb.Router) error {
 			router.GET("/", func() string { return "OK" })
 			return nil
 		},
-		Modules: []ginserver.Module{NewRatingModule()},
+		Modules: []gweb.Module{NewRatingModule()},
 	}
 )
 

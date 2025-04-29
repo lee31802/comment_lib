@@ -1,4 +1,4 @@
-package ginserver
+package gweb
 
 import (
 	"bytes"
@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/codegangsta/inject"
 	"github.com/gin-gonic/gin"
-	"github.com/lee31802/comment_lib/ginserver/pprof"
+	"github.com/lee31802/comment_lib/gweb/pprof"
 	"html/template"
 	"log"
 	"net/http"
@@ -23,9 +23,9 @@ import (
 // Stopper is callback invoked before ginweb has stopped.
 type Stopper func() error
 
-// ginServer is the gin application instance, it contains a *gin.Engine instance,
+// gWeb is the gin application instance, it contains a *gin.Engine instance,
 // module maps, configuration settings and environment variables.
-type ginServer struct {
+type gWeb struct {
 	router *router
 
 	injector inject.Injector
@@ -51,7 +51,7 @@ type ginServer struct {
 	whenStops []Stopper
 }
 
-var s *ginServer
+var gw *gWeb
 
 // shortcuts
 var (
@@ -61,21 +61,21 @@ var (
 )
 
 func init() {
-	s = newGinServer()
-	debugPrint(fmt.Sprintf("init:%+v", s))
-	Config = s.config
-	Env = s.environ
-	Opts = s.opts
+	gw = newGinServer()
+	debugPrint(fmt.Sprintf("init:%+v", gw))
+	Config = gw.config
+	Env = gw.environ
+	Opts = gw.opts
 }
 
 // Configure default ginweb app options.
 func Configure(options ...Option) {
 	for _, setter := range options {
-		setter(s.opts)
+		setter(gw.opts)
 	}
 }
 
-func (g *ginServer) initConfig() {
+func (g *gWeb) initConfig() {
 	appPath := g.opts.AppPath
 	if appPath == "" {
 		appPath = getWorkDir()
@@ -85,7 +85,7 @@ func (g *ginServer) initConfig() {
 	g.opts.updateFromConfig(g.config)
 }
 
-func (g *ginServer) initBeforeRun() {
+func (g *gWeb) initBeforeRun() {
 	g.initConfig()
 	g.initComponents()
 	g.initPlugins(g.opts.Plugins)
@@ -93,7 +93,7 @@ func (g *ginServer) initBeforeRun() {
 }
 
 // newGinServer returns a newGinServer application instance with given config.
-func newGinServer(options ...Option) *ginServer {
+func newGinServer(options ...Option) *gWeb {
 	// Default config
 	opts := newOptions()
 	for _, setter := range options {
@@ -102,7 +102,7 @@ func newGinServer(options ...Option) *ginServer {
 	appPath := getWorkDir()
 	defaultEnv := defaultEnviron()
 	config := newConfiguration()
-	gs := &ginServer{
+	gs := &gWeb{
 		injector: inject.New(),
 		appPath:  appPath,
 		opts:     opts,
@@ -132,14 +132,14 @@ func initConfiguration(appPath string, env *Environ) *Configuration {
 	return config
 }
 
-func (g *ginServer) initModuleConfigs(module ModuleInfo) {
+func (g *gWeb) initModuleConfigs(module ModuleInfo) {
 	if path, exists := module.ConfigPath(); exists {
 		debugPrint("load module config: %v", path)
 		g.config.apply(path)
 	}
 }
 
-func (g *ginServer) initPlugins(plugins []Plugin) {
+func (g *gWeb) initPlugins(plugins []Plugin) {
 	for _, plugin := range plugins {
 		plugin.Install(g.injector, func(s Stopper) {
 			g.whenStops = append(g.whenStops, s)
@@ -147,7 +147,7 @@ func (g *ginServer) initPlugins(plugins []Plugin) {
 	}
 }
 
-func (g *ginServer) initComponents() {
+func (g *gWeb) initComponents() {
 	// Init engine
 	engine := g.opts.Engine
 	if engine == nil {
@@ -191,7 +191,7 @@ func (g *ginServer) initComponents() {
 	//go reporter.ListenAndServe()
 }
 
-func (g *ginServer) registerSignals() {
+func (g *gWeb) registerSignals() {
 	go func() {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt)
@@ -201,7 +201,7 @@ func (g *ginServer) registerSignals() {
 }
 
 // RegisterModule registers a module to application.
-func (g *ginServer) RegisterModule(m Module) error {
+func (g *gWeb) RegisterModule(m Module) error {
 	pkgPath := reflect.TypeOf(m).Elem().PkgPath()
 	pkgPath = strings.TrimLeft(pkgPath, "_")
 	if _, ok := g.modules[pkgPath]; ok {
@@ -223,11 +223,11 @@ func (g *ginServer) RegisterModule(m Module) error {
 }
 
 // Engine returns the underlying *gin.Engine instance.
-func (g *ginServer) Engine() *gin.Engine {
+func (g *gWeb) Engine() *gin.Engine {
 	return g.engine
 }
 
-func (g *ginServer) registerAPIView() {
+func (g *gWeb) registerAPIView() {
 	debugPrint("register handlers:")
 	globalHandlerInfos.prettyPrint(false)
 	g.engine.GET("/gwapi", func(c *gin.Context) {
@@ -264,7 +264,7 @@ func extractJson(curl string) string {
 }
 
 // Execute starts listening and serving HTTP requests.
-func (g *ginServer) Run(cmd Command) error {
+func (g *gWeb) Run(cmd Command) error {
 	gin.SetMode(ReleaseMode) // disable gin's debug output
 	if g.environ.Env == "live" {
 		SetMode(ReleaseMode)
@@ -351,11 +351,11 @@ func (g *ginServer) Run(cmd Command) error {
 }
 
 // Stop terminates the application.
-func (g *ginServer) Stop() {
+func (g *gWeb) Stop() {
 	go func() { g.stopChan <- true }()
 }
 
-func (g *ginServer) GetHdlSimpleNameByUrl(url string, method string) string {
+func (g *gWeb) GetHdlSimpleNameByUrl(url string, method string) string {
 	key := method + ":" + url
 	v, ok := pathHandlerMap[key]
 	if !ok {

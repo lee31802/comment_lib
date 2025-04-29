@@ -1,4 +1,4 @@
-package ginserver
+package gweb
 
 const apiDoc = `
 <!DOCTYPE html>
