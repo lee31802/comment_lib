@@ -1,4 +1,4 @@
-package gweb
+package env
 
 import (
 	"os"
@@ -20,7 +20,7 @@ type Environ struct {
 	AppID string `json:"appid"`
 }
 
-func defaultEnviron() *Environ {
+func DefaultEnviron() *Environ {
 	return &Environ{
 		AppID: AppID(),
 		Env:   Environment(),

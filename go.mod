@@ -1,6 +1,6 @@
 module github.com/lee31802/comment_lib
 
-go 1.23.4
+go 1.24.2
 
 require (
 	github.com/codegangsta/inject v0.0.0-20150114235600-33e0aa1cb7c0
@@ -8,7 +8,8 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/spf13/viper v1.20.1
 	go.uber.org/zap v1.27.0
-	google.golang.org/protobuf v1.36.1
+	google.golang.org/grpc v1.72.0
+	google.golang.org/protobuf v1.36.6
 )
 
 require (
@@ -39,11 +40,12 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
+	github.com/zeromicro/go-zero v1.8.2 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
-	golang.org/x/crypto v0.32.0 // indirect
-	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/crypto v0.33.0 // indirect
+	golang.org/x/net v0.35.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

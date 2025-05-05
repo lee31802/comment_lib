@@ -1,4 +1,4 @@
-package gweb
+package conf
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ type Configuration struct {
 	store *viper.Viper
 }
 
-func newConfiguration() *Configuration {
+func NewConfiguration() *Configuration {
 	return &Configuration{
 		store: viper.New(),
 	}
@@ -107,7 +107,7 @@ func (c *Configuration) UnmarshalKey(key string, obj interface{}) error {
 	return c.store.UnmarshalKey(key, obj)
 }
 
-func (c *Configuration) apply(path string) {
+func (c *Configuration) Apply(path string) {
 	c.store.SetConfigFile(path)
 	c.store.MergeInConfig()
 	c.store.SetConfigFile("")

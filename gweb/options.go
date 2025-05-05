@@ -1,6 +1,7 @@
 package gweb
 
 import (
+	"github.com/lee31802/comment_lib/conf"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -37,7 +38,7 @@ func newOptions() *Options {
 	}
 }
 
-func (opts *Options) updateFromConfig(cfg *Configuration) {
+func (opts *Options) updateFromConfig(cfg *conf.Configuration) {
 	err := cfg.UnmarshalKey("ginweb", &opts)
 	if err != nil {
 		log.Printf("unmarshal ginweb config err: %v", err)
@@ -50,8 +51,8 @@ func (opts *Options) updateFromConfig(cfg *Configuration) {
 // Option defines a function to modify options.
 type Option func(*Options)
 
-// WithAppApth sets application path.
-func WithAppApth(appPath string) Option {
+// WithAppPath sets application path.
+func WithAppPath(appPath string) Option {
 	return func(opts *Options) {
 		opts.AppPath = appPath
 	}

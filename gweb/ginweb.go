@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"github.com/codegangsta/inject"
 	"github.com/gin-gonic/gin"
+	"github.com/lee31802/comment_lib/conf"
+	"github.com/lee31802/comment_lib/env"
 	"github.com/lee31802/comment_lib/gweb/pprof"
+	"github.com/lee31802/comment_lib/util"
 	"html/template"
 	"log"
 	"net/http"
@@ -32,9 +35,9 @@ type gWeb struct {
 
 	appPath string
 
-	environ *Environ
+	environ *env.Environ
 
-	config *Configuration
+	config *conf.Configuration
 
 	opts *Options
 
@@ -55,14 +58,13 @@ var gw *gWeb
 
 // shortcuts
 var (
-	Config *Configuration
-	Env    *Environ
+	Config *conf.Configuration
+	Env    *env.Environ
 	Opts   *Options
 )
 
 func init() {
-	gw = newGinServer()
-	debugPrint(fmt.Sprintf("init:%+v", gw))
+	gw = newGinWeb()
 	Config = gw.config
 	Env = gw.environ
 	Opts = gw.opts
@@ -78,7 +80,7 @@ func Configure(options ...Option) {
 func (g *gWeb) initConfig() {
 	appPath := g.opts.AppPath
 	if appPath == "" {
-		appPath = getWorkDir()
+		appPath = util.GetWorkDir()
 	}
 	g.appPath = appPath
 	*g.config = *initConfiguration(appPath, g.environ)
@@ -92,16 +94,17 @@ func (g *gWeb) initBeforeRun() {
 	g.registerSignals()
 }
 
-// newGinServer returns a newGinServer application instance with given config.
-func newGinServer(options ...Option) *gWeb {
+// newGinWeb returns a newGinWeb application instance with given config.
+func newGinWeb(options ...Option) *gWeb {
 	// Default config
+
 	opts := newOptions()
 	for _, setter := range options {
 		setter(opts)
 	}
-	appPath := getWorkDir()
-	defaultEnv := defaultEnviron()
-	config := newConfiguration()
+	appPath := util.GetWorkDir()
+	defaultEnv := env.DefaultEnviron()
+	config := conf.NewConfiguration()
 	gs := &gWeb{
 		injector: inject.New(),
 		appPath:  appPath,
@@ -115,8 +118,8 @@ func newGinServer(options ...Option) *gWeb {
 	return gs
 }
 
-func initConfiguration(appPath string, env *Environ) *Configuration {
-	config := newConfiguration()
+func initConfiguration(appPath string, env *env.Environ) *conf.Configuration {
+	config := conf.NewConfiguration()
 	configName := fmt.Sprintf("config_%v.yml", env.Env)
 	configPath := path.Join(appPath, "conf", configName)
 	defaultConfigPath := path.Join(appPath, "conf", "config.yml")
@@ -125,19 +128,19 @@ func initConfiguration(appPath string, env *Environ) *Configuration {
 			debugPrint("load app config error: %v", err.Error())
 		} else {
 			debugPrint("load app config: %v", path)
-			config.apply(path)
+			config.Apply(path)
 			break
 		}
 	}
 	return config
 }
 
-func (g *gWeb) initModuleConfigs(module ModuleInfo) {
-	if path, exists := module.ConfigPath(); exists {
-		debugPrint("load module config: %v", path)
-		g.config.apply(path)
-	}
-}
+//func (g *gWeb) initModuleConfigs(module ModuleInfo) {
+//	if path, exists := module.ConfigPath(); exists {
+//		debugPrint("load module config: %v", path)
+//		g.config.Apply(path)
+//	}
+//}
 
 func (g *gWeb) initPlugins(plugins []Plugin) {
 	for _, plugin := range plugins {
@@ -287,7 +290,7 @@ func (g *gWeb) Run(cmd Command) error {
 	if g.opts.Address != "" {
 		addrs = append(addrs, g.opts.Address)
 	}
-	address := resolveAddress(addrs)
+	address := util.ResolveAddress(addrs)
 	server := &http.Server{
 		Addr:    address,
 		Handler: g.engine,

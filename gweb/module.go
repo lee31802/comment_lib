@@ -2,6 +2,7 @@ package gweb
 
 import (
 	"fmt"
+	"github.com/lee31802/comment_lib/env"
 	"os"
 	"path"
 	"path/filepath"
@@ -25,7 +26,7 @@ type ModuleInfo struct {
 	Module  Module
 	AppPath string
 	PkgPath string
-	Environ Environ
+	Environ env.Environ
 }
 
 // ConfigPath returns config location of the module.
