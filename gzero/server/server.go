@@ -29,7 +29,7 @@ type goZeroServer struct {
 	whenStops []Stopper
 }
 
-var gz *goZeroServer
+var gs *goZeroServer
 
 // shortcuts
 var (
@@ -39,16 +39,16 @@ var (
 )
 
 func init() {
-	gz = newGoZeroServer()
-	Config = gz.config
-	Env = gz.environ
-	Opts = gz.opts
+	gs = newGoZeroServer()
+	Config = gs.config
+	Env = gs.environ
+	Opts = gs.opts
 }
 
 // Configure default ginweb app options.
 func Configure(options ...Option) {
 	for _, setter := range options {
-		setter(gz.opts)
+		setter(gs.opts)
 	}
 }
 

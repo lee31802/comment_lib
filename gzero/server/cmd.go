@@ -17,6 +17,5 @@ type Command struct {
 }
 
 func (cmd Command) Execute() error {
-	return nil
-	//return gw.Run(cmd)
+	return gs.Run(cmd)
 }
