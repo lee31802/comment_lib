@@ -1,4 +1,4 @@
-package server
+package gzero
 
 import (
 	"google.golang.org/grpc"

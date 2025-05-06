@@ -1,4 +1,4 @@
-package server
+package gzero
 
 import (
 	"github.com/lee31802/comment_lib/conf"
@@ -14,6 +14,7 @@ type Options struct {
 	UnaryInterceptors  []grpc.UnaryServerInterceptor
 	StreamInterceptors []grpc.StreamServerInterceptor
 	zrpc.RpcServerConf
+	zrpc.RpcClientConf
 }
 
 func newOptions() *Options {
@@ -23,6 +24,12 @@ func newOptions() *Options {
 				Name: "demo",
 			},
 			ListenOn: "0.0.0.0:8081",
+			Etcd: discov.EtcdConf{
+				Hosts: []string{"127.0.0.1:2379"},
+				Key:   "demo",
+			},
+		},
+		RpcClientConf: zrpc.RpcClientConf{
 			Etcd: discov.EtcdConf{
 				Hosts: []string{"127.0.0.1:2379"},
 				Key:   "demo",

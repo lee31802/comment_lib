@@ -1,4 +1,4 @@
-package server
+package gzero
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ import (
 // Stopper is callback invoked before ginweb has stopped.
 type Stopper func() error
 
-type goZeroServer struct {
+type goZero struct {
 	appPath string
 	environ *env.Environ
 	config  *conf.Configuration
@@ -29,7 +29,7 @@ type goZeroServer struct {
 	whenStops []Stopper
 }
 
-var gs *goZeroServer
+var gs *goZero
 
 // shortcuts
 var (
@@ -52,7 +52,7 @@ func Configure(options ...Option) {
 	}
 }
 
-func (g *goZeroServer) initConfig() {
+func (g *goZero) initConfig() {
 	appPath := g.opts.AppPath
 	if appPath == "" {
 		appPath = util.GetWorkDir()
@@ -62,13 +62,13 @@ func (g *goZeroServer) initConfig() {
 	g.opts.updateFromConfig(g.config)
 }
 
-func (g *goZeroServer) initBeforeRun() {
+func (g *goZero) initBeforeRun() {
 	g.initConfig()
 	g.registerSignals()
 }
 
 // newGoZeroServer returns a newGoZeroServer application instance with given config.
-func newGoZeroServer(options ...Option) *goZeroServer {
+func newGoZeroServer(options ...Option) *goZero {
 	// Default config
 	opts := newOptions()
 	for _, setter := range options {
@@ -77,7 +77,7 @@ func newGoZeroServer(options ...Option) *goZeroServer {
 	appPath := util.GetWorkDir()
 	defaultEnv := env.DefaultEnviron()
 	config := conf.NewConfiguration()
-	gs := &goZeroServer{
+	server := &goZero{
 		appPath:  appPath,
 		opts:     opts,
 		config:   config,
@@ -85,7 +85,7 @@ func newGoZeroServer(options ...Option) *goZeroServer {
 		stopChan: make(chan bool),
 		errChan:  make(chan error),
 	}
-	return gs
+	return server
 }
 func initConfiguration(appPath string, env *env.Environ) *conf.Configuration {
 	config := conf.NewConfiguration()
@@ -104,7 +104,7 @@ func initConfiguration(appPath string, env *env.Environ) *conf.Configuration {
 	return config
 }
 
-func (g *goZeroServer) registerSignals() {
+func (g *goZero) registerSignals() {
 	go func() {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt)
@@ -114,7 +114,7 @@ func (g *goZeroServer) registerSignals() {
 }
 
 // Execute starts listening and serving HTTP requests.
-func (g *goZeroServer) Run(cmd Command) error {
+func (g *goZero) Run(cmd Command) error {
 
 	g.initBeforeRun()
 	if cmd.PreRun != nil {
@@ -171,6 +171,6 @@ func (g *goZeroServer) Run(cmd Command) error {
 }
 
 // Stop terminates the application.
-func (g *goZeroServer) Stop() {
+func (g *goZero) Stop() {
 	go func() { g.stopChan <- true }()
 }

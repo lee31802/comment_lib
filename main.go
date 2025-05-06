@@ -2,7 +2,9 @@ package main
 
 import (
 	"github.com/lee31802/comment_lib/gweb"
+	"github.com/lee31802/comment_lib/gzero"
 	"github.com/lee31802/comment_lib/logkit"
+	"google.golang.org/grpc"
 )
 
 func init() {
@@ -27,6 +29,11 @@ var (
 		},
 		Modules: []gweb.Module{NewRatingModule()},
 	}
+	gz = &gzero.Command{
+		RegisTerFunc: func(grpcServer *grpc.Server) {
+
+		},
+	}
 )
 
 func main() {
@@ -46,5 +53,6 @@ func main() {
 	//
 	// server:1.继承了requeset会自动调用validate等方法 2.自动绑定request 3.自动生成一个可以复现的curl命令 4.自动生成接口文档
 	// 5.query携带了_show_request_id，那么就会返回requestid 6.提供了pprof 7.提供了捕捉panic的选项
-	cmd.Execute()
+	//cmd.Execute()
+	gz.Execute()
 }
