@@ -12,8 +12,12 @@ var (
 		Name: "test",
 		PreRun: func(router gweb.Router) error {
 			logkit.Init()
+			logkit.Error("success2222")
 			router.GET("/", func() string { return "OK" })
 			return nil
+		},
+		PreStop: func() error {
+			return logkit.Sync()
 		},
 		Modules: []gweb.Module{NewRatingModule()},
 	}
@@ -41,7 +45,7 @@ func main() {
 	//
 	// client:1.继承了requeset会自动调用validate等方法 2.自动绑定request 3.自动生成一个可以复现的curl命令 4.自动生成接口文档
 	// 5.query携带了_show_request_id，那么就会返回requestid 6.提供了pprof 7.提供了捕捉panic的选项
+	logkit.Error("success2222")
 	cmd.Execute()
-	logkit.Info("success")
 	//gz.Execute()
 }

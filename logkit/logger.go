@@ -15,36 +15,36 @@ func newLogger(opts ...Option) (*LogkitLogger, error) {
 		opt(options)
 	}
 
-	err := level.UnmarshalText([]byte(options.level)) //传入 "info" 时，会转换为 zapcore.InfoLevel
+	err := level.UnmarshalText([]byte(options.Level)) //传入 "info" 时，会转换为 zapcore.InfoLevel
 	if err != nil {
 		return nil, err
 	}
 
 	infoFileHandler := zapcore.AddSync(&lumberjack.Logger{
-		Filename:    options.path + "/info.log",
-		MaxSize:     options.maxSize,
-		MaxBackups:  options.maxBackups,
-		MaxAge:      options.maxAge,
-		BufferSize:  options.bufferSize,
-		ChannelSize: options.channelSize,
+		Filename:    options.Path + "/info.log",
+		MaxSize:     options.MaxSize,
+		MaxBackups:  options.MaxBackups,
+		MaxAge:      options.MaxAge,
+		BufferSize:  options.BufferSize,
+		ChannelSize: options.ChannelSize,
 		AsyncWrite:  true,
 	})
 	errFileHandler := zapcore.AddSync(&lumberjack.Logger{
-		Filename:    options.path + "/error.log",
-		MaxSize:     options.maxSize,
-		MaxBackups:  options.maxBackups,
-		MaxAge:      options.maxAge,
-		BufferSize:  options.bufferSize,
-		ChannelSize: options.channelSize,
-		AsyncWrite:  options.errorAsync,
+		Filename:    options.Path + "/error.log",
+		MaxSize:     options.MaxSize,
+		MaxBackups:  options.MaxBackups,
+		MaxAge:      options.MaxAge,
+		BufferSize:  options.BufferSize,
+		ChannelSize: options.ChannelSize,
+		AsyncWrite:  options.ErrorAsync,
 	})
 	debugFileHandler := zapcore.AddSync(&lumberjack.Logger{
-		Filename:    options.path + "/debug.log",
-		MaxSize:     options.maxSize,
-		MaxBackups:  options.maxBackups,
-		MaxAge:      options.maxAge,
-		BufferSize:  options.bufferSize,
-		ChannelSize: options.channelSize,
+		Filename:    options.Path + "/debug.log",
+		MaxSize:     options.MaxSize,
+		MaxBackups:  options.MaxBackups,
+		MaxAge:      options.MaxAge,
+		BufferSize:  options.BufferSize,
+		ChannelSize: options.ChannelSize,
 		AsyncWrite:  true,
 	})
 
@@ -85,14 +85,14 @@ func newLogger(opts ...Option) (*LogkitLogger, error) {
 		zapcore.NewCore(options.encoderBuilder(devEncoder), debugFileHandler, NewLevelEnabler(&level, zapcore.DebugLevel)),
 	}
 
-	if options.enableConsole {
+	if options.EnableConsole {
 		//zapcore.Lock 用于确保在多线程环境下对标准输出的安全访问
 		consoleHandler := zapcore.Lock(os.Stdout)
 		zapCores = append(zapCores, zapcore.NewCore(zapcore.NewConsoleEncoder(devEncoder), consoleHandler, zapcore.DebugLevel))
 	}
 	// create client with priority for our opts
 	defaultZapOptions := []zap.Option{}
-	if options.enableCaller {
+	if options.EnableCaller {
 		defaultZapOptions = append(
 			defaultZapOptions,
 			zap.AddCaller(),

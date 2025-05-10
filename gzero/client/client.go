@@ -66,15 +66,14 @@ func initConfiguration(appPath string, env *env.Environ) *conf.Configuration {
 }
 
 func (c *client) initConfig() {
-	if c.serviceName == "" {
-		return
+	if c.opts.serviceName == "" {
+		panic("service name not set")
 	}
 	appPath := c.opts.appPath
 	if appPath == "" {
 		appPath = util.GetWorkDir()
 	}
 	c.appPath = appPath
-
 	*c.config = *initConfiguration(appPath, c.environ)
-	c.opts.updateFromConfig(c.serviceName, c.config)
+	c.opts.updateFromConfig(c.config)
 }

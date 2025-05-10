@@ -27,9 +27,9 @@ func newOptions() *Options {
 // Option defines a function to modify client.
 type Option func(*Options)
 
-func (opts *Options) updateFromConfig(serviceName string, cfg *conf.Configuration) {
+func (opts *Options) updateFromConfig(cfg *conf.Configuration) {
 	zClient := zrpc.RpcClientConf{}
-	err := cfg.UnmarshalKey(serviceName, &zClient)
+	err := cfg.UnmarshalKey(opts.serviceName, &zClient)
 	if err != nil {
 		log.Printf("unmarshal gozero client config err: %v", err)
 	}

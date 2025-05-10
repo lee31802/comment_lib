@@ -35,9 +35,6 @@ func getCfgOptions() Options {
 	return logOpts
 }
 
-// Init will reset logger's client, so need recreate defaultLogger
-// maybe Init isn't a good function name
-// but keep it in order to maintain compatibility
 func Init() error {
 	var err error
 	var has bool
@@ -46,18 +43,28 @@ func Init() error {
 		getCfgOptions()
 	}
 	defaultLogger, err = newLogger(
-		Level(logOpts.level),
-		Path(logOpts.path),
-		MaxSize(logOpts.maxSize),
-		MaxBackups(logOpts.maxBackups),
-		MaxAge(logOpts.maxAge),
-		BufferSize(logOpts.bufferSize),
-		ChannelSize(logOpts.channelSize),
-		EnableConsole(logOpts.enableConsole),
-		ErrorAsync(logOpts.errorAsync),
+		Level(logOpts.Level),
+		Path(logOpts.Path),
+		MaxSize(logOpts.MaxSize),
+		MaxBackups(logOpts.MaxBackups),
+		MaxAge(logOpts.MaxAge),
+		BufferSize(logOpts.BufferSize),
+		ChannelSize(logOpts.ChannelSize),
+		EnableConsole(logOpts.EnableConsole),
+		ErrorAsync(logOpts.ErrorAsync),
 	)
 	return err
 }
+
+//
+// Init will reset logger's client, so need recreate defaultLogger
+// maybe Init isn't a good function name
+// but keep it in order to maintain compatibility
+//func Init(opts ...Option) error {
+//	var err error
+//	defaultLogger, err = newLogger(opts...)
+//	return err
+//}
 
 func GetLogger() *LogkitLogger {
 	return defaultLogger

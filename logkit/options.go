@@ -43,16 +43,16 @@ func newOptions() *Options {
 
 type Options struct {
 	appPath       string
-	path          string
-	maxSize       int
-	maxBackups    int
-	maxAge        int
-	level         string
-	bufferSize    int
-	channelSize   int
-	enableConsole bool
-	enableCaller  bool
-	errorAsync    bool // error log using async writer
+	Path          string `mapstructure:"Path"`
+	MaxSize       int    `mapstructure:"MaxSize"`
+	MaxBackups    int    `mapstructure:"MaxBackups"`
+	MaxAge        int    `mapstructure:"MaxAge"`
+	Level         string `mapstructure:"Level"`
+	BufferSize    int    `mapstructure:"BufferSize"`
+	ChannelSize   int    `mapstructure:"ChannelSize"`
+	EnableConsole bool   `mapstructure:"EnableConsole"`
+	EnableCaller  bool   `mapstructure:"EnableCaller"`
+	ErrorAsync    bool   `mapstructure:"ErrorAsync"` // error log using async writer
 
 	encoderBuilder encoderBuilder
 }
@@ -75,61 +75,61 @@ func AppPath(path string) Option {
 }
 func Path(p string) Option {
 	return func(o *Options) {
-		o.path = p
+		o.Path = p
 	}
 }
 
 func MaxSize(m int) Option {
 	return func(o *Options) {
-		o.maxSize = m
+		o.MaxSize = m
 	}
 }
 
 func MaxBackups(m int) Option {
 	return func(o *Options) {
-		o.maxBackups = m
+		o.MaxBackups = m
 	}
 }
 
 func MaxAge(m int) Option {
 	return func(o *Options) {
-		o.maxAge = m
+		o.MaxAge = m
 	}
 }
 
 func Level(l string) Option {
 	return func(o *Options) {
-		o.level = l
+		o.Level = l
 	}
 }
 
 func BufferSize(b int) Option {
 	return func(o *Options) {
-		o.bufferSize = b
+		o.BufferSize = b
 	}
 }
 
 func ChannelSize(c int) Option {
 	return func(o *Options) {
-		o.channelSize = c
+		o.ChannelSize = c
 	}
 }
 
 func EnableConsole(e bool) Option {
 	return func(o *Options) {
-		o.enableConsole = e
+		o.EnableConsole = e
 	}
 }
 
 func EnableCaller(e bool) Option {
 	return func(o *Options) {
-		o.enableCaller = e
+		o.EnableCaller = e
 	}
 }
 
 func ErrorAsync(e bool) Option {
 	return func(o *Options) {
-		o.errorAsync = e
+		o.ErrorAsync = e
 	}
 }
 
