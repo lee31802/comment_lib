@@ -70,15 +70,8 @@ func init() {
 	Opts = gw.opts
 }
 
-// Configure default ginweb app options.
-func Configure(options ...Option) {
-	for _, setter := range options {
-		setter(gw.opts)
-	}
-}
-
-func (g *gWeb) initConfig() {
-	appPath := g.opts.AppPath
+func (g *gWeb) initConfig(cmd Command) {
+	appPath := cmd.AppPath
 	if appPath == "" {
 		appPath = util.GetWorkDir()
 	}
@@ -87,21 +80,21 @@ func (g *gWeb) initConfig() {
 	g.opts.updateFromConfig(g.config)
 }
 
-func (g *gWeb) initBeforeRun() {
-	g.initConfig()
-	g.initComponents()
-	g.initPlugins(g.opts.Plugins)
+func (g *gWeb) initBeforeRun(cmd Command) {
+	g.initConfig(cmd)
+	g.initComponents(cmd)
+	g.initPlugins(cmd.Plugins)
 	g.registerSignals()
 }
 
 // newGinWeb returns a newGinWeb application instance with given config.
-func newGinWeb(options ...Option) *gWeb {
+func newGinWeb() *gWeb {
 	// Default config
 
 	opts := newOptions()
-	for _, setter := range options {
-		setter(opts)
-	}
+	//for _, setter := range options {
+	//	setter(opts)
+	//}
 	appPath := util.GetWorkDir()
 	defaultEnv := env.DefaultEnviron()
 	config := conf.NewConfiguration()
@@ -135,13 +128,6 @@ func initConfiguration(appPath string, env *env.Environ) *conf.Configuration {
 	return config
 }
 
-//func (g *gWeb) initModuleConfigs(module ModuleInfo) {
-//	if path, exists := module.ConfigPath(); exists {
-//		debugPrint("load module config: %v", path)
-//		g.config.Apply(path)
-//	}
-//}
-
 func (g *gWeb) initPlugins(plugins []Plugin) {
 	for _, plugin := range plugins {
 		plugin.Install(g.injector, func(s Stopper) {
@@ -150,15 +136,15 @@ func (g *gWeb) initPlugins(plugins []Plugin) {
 	}
 }
 
-func (g *gWeb) initComponents() {
+func (g *gWeb) initComponents(cmd Command) {
 	// Init engine
-	engine := g.opts.Engine
+	engine := cmd.Engine
 	if engine == nil {
 		engine = gin.New()
 	}
 	g.engine = engine
 	// Init middlewares
-	middlewares := g.opts.Middlewares[:]
+	middlewares := cmd.Middlewares[:]
 	if g.opts.Recovery {
 		middlewares = append(middlewares, Recovery())
 	}
@@ -272,7 +258,7 @@ func (g *gWeb) Run(cmd Command) error {
 	if g.environ.Env == "live" {
 		SetMode(ReleaseMode)
 	}
-	g.initBeforeRun()
+	g.initBeforeRun(cmd)
 	if cmd.PreRun != nil {
 		if err := cmd.PreRun(g.router); err != nil {
 			debugPrint("service PreRun() error: %v", err.Error())
@@ -300,12 +286,11 @@ func (g *gWeb) Run(cmd Command) error {
 		g.registerAPIView()
 		debugPrint("API docs address: %v/gwapi", address)
 	}
-
 	go func() {
 		debugPrint("Listening on %v", address)
 		err := server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			log.Fatalf("server listen error: %s\n", err)
+			log.Fatalf("client listen error: %s\n", err)
 		}
 		g.errChan <- err
 	}()
@@ -341,7 +326,7 @@ func (g *gWeb) Run(cmd Command) error {
 	defer cancel()
 	err := server.Shutdown(ctx)
 	if err != nil {
-		debugPrint("server shutdown error: %v", err.Error())
+		debugPrint("client shutdown error: %v", err.Error())
 		retErr = err
 	}
 	if cmd.PostStop != nil {

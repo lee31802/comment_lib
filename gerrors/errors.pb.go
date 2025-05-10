@@ -2,9 +2,9 @@
 // versions:
 // 	protoc-gen-go v1.36.6
 // 	protoc        v5.29.3
-// source: ginerrors/errors.proto
+// source: gerrors/errors.proto
 
-package ginerrors
+package gerrors
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -96,7 +96,7 @@ func file_ginerrors_errors_proto_rawDescGZIP() []byte {
 
 var file_ginerrors_errors_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_ginerrors_errors_proto_goTypes = []any{
-	(*GinError)(nil), // 0: ginerrors.GinError
+	(*GinError)(nil), // 0: gerrors.GinError
 }
 var file_ginerrors_errors_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type

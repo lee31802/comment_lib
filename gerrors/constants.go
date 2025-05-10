@@ -1,4 +1,4 @@
-package ginerrors
+package gerrors
 
 // Error definitions
 var (
@@ -28,7 +28,7 @@ var (
 	ErrorBrokenPipe  = New(302, "broken pipe")
 
 	// others
-	ErrorUnknown           = New(500, "server internal error")
+	ErrorUnknown           = New(500, "client internal error")
 	ErrorInvalidValidation = New(501, "Invalid Validation Error")
 	ErrorValidation        = New(502, "Validation Error")
 )

@@ -1,10 +1,13 @@
-package gzero
+package server
 
 import (
 	"fmt"
+	"github.com/codegangsta/inject"
 	"github.com/lee31802/comment_lib/conf"
 	"github.com/lee31802/comment_lib/env"
+	"github.com/lee31802/comment_lib/gzero"
 	"github.com/lee31802/comment_lib/util"
+	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/zrpc"
 	"os"
 	"os/signal"
@@ -16,11 +19,12 @@ import (
 type Stopper func() error
 
 type goZero struct {
-	appPath string
-	environ *env.Environ
-	config  *conf.Configuration
-	opts    *Options
-	mu      sync.RWMutex
+	appPath  string
+	injector inject.Injector
+	environ  *env.Environ
+	config   *conf.Configuration
+	opts     *Options
+	mu       sync.RWMutex
 
 	stopChan chan bool
 
@@ -43,17 +47,11 @@ func init() {
 	Config = gs.config
 	Env = gs.environ
 	Opts = gs.opts
+	logx.Disable()
 }
 
-// Configure default ginweb app options.
-func Configure(options ...Option) {
-	for _, setter := range options {
-		setter(gs.opts)
-	}
-}
-
-func (g *goZero) initConfig() {
-	appPath := g.opts.AppPath
+func (g *goZero) initConfig(cmd Command) {
+	appPath := cmd.AppPath
 	if appPath == "" {
 		appPath = util.GetWorkDir()
 	}
@@ -62,9 +60,18 @@ func (g *goZero) initConfig() {
 	g.opts.updateFromConfig(g.config)
 }
 
-func (g *goZero) initBeforeRun() {
-	g.initConfig()
+func (g *goZero) initBeforeRun(cmd Command) {
+	g.initConfig(cmd)
+	g.initPlugins(cmd.Plugins)
 	g.registerSignals()
+}
+
+func (g *goZero) initPlugins(plugins []Plugin) {
+	for _, plugin := range plugins {
+		plugin.Install(g.injector, func(s Stopper) {
+			g.whenStops = append(g.whenStops, s)
+		})
+	}
 }
 
 // newGoZeroServer returns a newGoZeroServer application instance with given config.
@@ -78,6 +85,7 @@ func newGoZeroServer(options ...Option) *goZero {
 	defaultEnv := env.DefaultEnviron()
 	config := conf.NewConfiguration()
 	server := &goZero{
+		injector: inject.New(),
 		appPath:  appPath,
 		opts:     opts,
 		config:   config,
@@ -94,9 +102,9 @@ func initConfiguration(appPath string, env *env.Environ) *conf.Configuration {
 	defaultConfigPath := path.Join(appPath, "conf", "config.yml")
 	for _, path := range []string{configPath, defaultConfigPath} {
 		if _, err := os.Stat(path); os.IsNotExist(err) {
-			debugPrint("load app config error: %v", err.Error())
+			gzero.DebugPrint("load app config error: %v", err.Error())
 		} else {
-			debugPrint("load app config: %v", path)
+			gzero.DebugPrint("load app config: %v", path)
 			config.Apply(path)
 			break
 		}
@@ -115,55 +123,53 @@ func (g *goZero) registerSignals() {
 
 // Execute starts listening and serving HTTP requests.
 func (g *goZero) Run(cmd Command) error {
-
-	g.initBeforeRun()
+	g.initBeforeRun(cmd)
 	if cmd.PreRun != nil {
 		if err := cmd.PreRun(); err != nil {
-			debugPrint("service PreRun() error: %v", err.Error())
+			gzero.DebugPrint("service PreRun() error: %v", err.Error())
 			return err
 		}
 	}
 	s := &zrpc.RpcServer{}
 	go func() {
-		debugPrint("Listening on %v", g.opts.ListenOn)
-		s = zrpc.MustNewServer(g.opts.RpcServerConf, cmd.RegisTerFunc)
-		s.AddUnaryInterceptors(g.opts.UnaryInterceptors...)
-		s.AddStreamInterceptors(g.opts.StreamInterceptors...)
+		s = zrpc.MustNewServer(g.opts.Server, cmd.RegisterServer)
+		s.AddUnaryInterceptors(cmd.UnaryInterceptors...)
+		s.AddStreamInterceptors(cmd.StreamInterceptors...)
 		s.Start()
 	}()
 	if cmd.PostRun != nil {
 		if err := cmd.PostRun(); err != nil {
 			g.errChan <- err
-			debugPrint("service AfterStart() error: %v", err.Error())
+			gzero.DebugPrint("service AfterStart() error: %v", err.Error())
 			return err
 		}
 	}
 	var retErr error
 	select {
 	case <-g.stopChan:
-		debugPrint("receive stop signal")
+		gzero.DebugPrint("receive stop signal")
 		break
 	case err := <-g.errChan:
-		debugPrint("error: %v", err.Error())
+		gzero.DebugPrint("error: %v", err.Error())
 		retErr = err
 		break
 	}
 	if cmd.PreStop != nil {
 		if err := cmd.PreStop(); err != nil {
-			debugPrint("service BeforeStop() error: %v", err.Error())
+			gzero.DebugPrint("service BeforeStop() error: %v", err.Error())
 			return err
 		}
 	}
 	for _, callback := range g.whenStops {
 		err := callback()
 		if err != nil {
-			debugPrint("callback error: %v", err.Error())
+			gzero.DebugPrint("callback error: %v", err.Error())
 		}
 	}
 	s.Stop()
 	if cmd.PostStop != nil {
 		if err := cmd.PostStop(); err != nil {
-			debugPrint("service AfterStop() error: %v", err.Error())
+			gzero.DebugPrint("service AfterStop() error: %v", err.Error())
 			return err
 		}
 	}

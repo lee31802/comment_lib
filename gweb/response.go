@@ -1,7 +1,7 @@
 package gweb
 
 import (
-	"github.com/lee31802/comment_lib/ginerrors"
+	"github.com/lee31802/comment_lib/gerrors"
 	"io"
 
 	"github.com/gin-gonic/gin"
@@ -50,9 +50,9 @@ func (fs *fileResponse) Render(ctx *gin.Context) {
 }
 
 // JSONResponse returns a json response that serializes the given struct as JSON into the response body.
-func JSONResponse(httpStatusCode int, err ginerrors.Error, data interface{}) Response {
+func JSONResponse(httpStatusCode int, err gerrors.Error, data interface{}) Response {
 	if err == nil {
-		err = ginerrors.Success
+		err = gerrors.Success
 	}
 	return &jsonResponse{
 		jsonResponseData: jsonResponseData{
@@ -68,7 +68,7 @@ func JSONResponse(httpStatusCode int, err ginerrors.Error, data interface{}) Res
 type jsonResponse struct {
 	jsonResponseData
 	httpStatusCode int
-	err            ginerrors.Error
+	err            gerrors.Error
 }
 
 type jsonResponseData struct {
@@ -82,7 +82,7 @@ func (resp *jsonResponse) Render(ctx *gin.Context) {
 	if resp == nil {
 		return
 	}
-	if resp.err != ginerrors.Success && resp.err != nil {
+	if resp.err != gerrors.Success && resp.err != nil {
 		ctx.Error(resp.err)
 	}
 	ctx.JSON(resp.httpStatusCode, resp.jsonResponseData)

@@ -2,7 +2,7 @@ package gweb
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/lee31802/comment_lib/ginerrors"
+	"github.com/lee31802/comment_lib/gerrors"
 	"reflect"
 )
 
@@ -15,18 +15,18 @@ const (
 type Request struct{}
 
 // Parse parses request from gin context.
-func (r *Request) Parse(c *gin.Context) ginerrors.Error {
-	return ginerrors.Success
+func (r *Request) Parse(c *gin.Context) gerrors.Error {
+	return gerrors.Success
 }
 
 // Validate checks the validation of the request.
-func (r *Request) Validate() ginerrors.Error {
-	return ginerrors.Success
+func (r *Request) Validate() gerrors.Error {
+	return gerrors.Success
 }
 
 type ServiceRequest interface {
-	Parse(*gin.Context) ginerrors.Error
-	Validate() ginerrors.Error
+	Parse(*gin.Context) gerrors.Error
+	Validate() gerrors.Error
 }
 
 type requestParser struct {
@@ -40,11 +40,11 @@ func newRequestParser(req interface{}) *requestParser {
 	}
 }
 
-func (rp *requestParser) parse(c *gin.Context) ginerrors.Error {
+func (rp *requestParser) parse(c *gin.Context) gerrors.Error {
 	rp.err = c.ShouldBind(rp.req)
 	rp.bindContext(c, rp.req)
 	if rp.err != nil {
-		return ginerrors.ErrorParseRequest
+		return gerrors.ErrorParseRequest
 	}
 	return nil
 }

@@ -2,42 +2,30 @@ package main
 
 import (
 	"github.com/lee31802/comment_lib/gweb"
-	"github.com/lee31802/comment_lib/gzero"
+	"github.com/lee31802/comment_lib/gzero/server"
 	"github.com/lee31802/comment_lib/logkit"
 	"google.golang.org/grpc"
 )
-
-func init() {
-	logkit.Init(
-		logkit.Level("debug"),
-		logkit.Path("log"),
-		logkit.MaxSize(1024),
-		logkit.MaxBackups(1024),
-		logkit.MaxAge(1),
-		logkit.EnableCaller(true),
-		logkit.EnableConsole(true),
-		logkit.ErrorAsync(false),
-	)
-}
 
 var (
 	cmd = &gweb.Command{
 		Name: "test",
 		PreRun: func(router gweb.Router) error {
+			logkit.Init()
 			router.GET("/", func() string { return "OK" })
 			return nil
 		},
 		Modules: []gweb.Module{NewRatingModule()},
 	}
-	gz = &gzero.Command{
-		RegisTerFunc: func(grpcServer *grpc.Server) {
+	gz = &server.Command{
+		RegisterServer: func(grpcServer *grpc.Server) {
 
 		},
 	}
 )
 
 func main() {
-	// log： 1.调整了输出样式更加直观 2.自动打印context里边携带的requestid和traceid3. 结合lumberjack做了日志切割等
+	// log： 1.调整了输出样式更加直观 2.自动打印context里边携带的requestid和traceid3. 结合lumberjack做了日志切割等4.用到了池化思想
 	//defer logkit.Sync()
 	//type request struct {
 	//	A int
@@ -51,8 +39,9 @@ func main() {
 	//logkit.FromContext(traceCtx).Error("AreaModule.BatchGetLocationGroupsByDistrict rpc failed", logkit.Any("req", req), logkit.Err(err))
 	//logkit.FromContext(traceCtx).Info("infolog")
 	//
-	// server:1.继承了requeset会自动调用validate等方法 2.自动绑定request 3.自动生成一个可以复现的curl命令 4.自动生成接口文档
+	// client:1.继承了requeset会自动调用validate等方法 2.自动绑定request 3.自动生成一个可以复现的curl命令 4.自动生成接口文档
 	// 5.query携带了_show_request_id，那么就会返回requestid 6.提供了pprof 7.提供了捕捉panic的选项
-	//cmd.Execute()
-	gz.Execute()
+	cmd.Execute()
+	logkit.Info("success")
+	//gz.Execute()
 }

@@ -3,8 +3,6 @@ package gweb
 import (
 	"github.com/lee31802/comment_lib/conf"
 	"log"
-
-	"github.com/gin-gonic/gin"
 )
 
 type Jaeger struct {
@@ -14,7 +12,6 @@ type Jaeger struct {
 
 type Options struct {
 	// Default is current work path.
-	AppPath string
 	Address string `mapstructure:"address"`
 	// Default is true.
 	Recovery bool `mapstructure:"recovery"`
@@ -23,9 +20,6 @@ type Options struct {
 	// Default is "/".
 	RootPath      string
 	UploadMetrics bool `mapstructure:"upload_metrics"`
-	Middlewares   []gin.HandlerFunc
-	Plugins       []Plugin
-	Engine        *gin.Engine
 	// trace
 	Jaeger Jaeger `mapstructure:"jaeger"`
 }
@@ -33,7 +27,6 @@ type Options struct {
 func newOptions() *Options {
 	return &Options{
 		Recovery: true,
-		Engine:   gin.New(),
 		RootPath: "/",
 	}
 }
@@ -48,40 +41,5 @@ func (opts *Options) updateFromConfig(cfg *conf.Configuration) {
 	}
 }
 
-// Option defines a function to modify options.
+// Option defines a function to modify client.
 type Option func(*Options)
-
-// WithAppPath sets application path.
-func WithAppPath(appPath string) Option {
-	return func(opts *Options) {
-		opts.AppPath = appPath
-	}
-}
-
-// WithEngine sets custom gin engine.
-func WithEngine(engine *gin.Engine) Option {
-	return func(opts *Options) {
-		opts.Engine = engine
-	}
-}
-
-// WithRootPath sets api root path.
-func WithRootPath(rootPath string) Option {
-	return func(opts *Options) {
-		opts.RootPath = rootPath
-	}
-}
-
-// WithMiddlewares sets global middlewares.
-func WithMiddlewares(middlewares ...gin.HandlerFunc) Option {
-	return func(opts *Options) {
-		opts.Middlewares = middlewares
-	}
-}
-
-// WithPlugins adapts custom plugins.
-func WithPlugins(plugins ...Plugin) Option {
-	return func(opts *Options) {
-		opts.Plugins = plugins
-	}
-}

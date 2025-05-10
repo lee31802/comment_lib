@@ -1,7 +1,7 @@
 package logkit
 
 import (
-	"github.com/lee31802/comment_lib/ginerrors"
+	"github.com/lee31802/comment_lib/gerrors"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -28,7 +28,7 @@ func extractFields(fields []zapcore.Field) []zapcore.Field {
 		}
 		err := field.Interface
 		for err != nil {
-			cause, ok := err.(ginerrors.Causer)
+			cause, ok := err.(gerrors.Causer)
 			if !ok {
 				break
 			}

@@ -11,6 +11,9 @@ type Group struct {
 type Command struct {
 	Name    string
 	AppPath string
+	// 可以自定义engine
+	Engine  *gin.Engine
+	Plugins []Plugin
 	// 全局的
 	Middlewares []gin.HandlerFunc
 	// PreRun: children of this command will not inherit.
@@ -23,11 +26,8 @@ type Command struct {
 }
 
 func (cmd Command) Execute() error {
-	if cmd.AppPath != "" {
-		WithAppPath(cmd.AppPath)
-	}
-	if cmd.Middlewares != nil {
-		WithMiddlewares(cmd.Middlewares...)
-	}
+	//if cmd.Middlewares != nil {
+	//	Configure(WithMiddlewares(cmd.Middlewares...))
+	//}
 	return gw.Run(cmd)
 }

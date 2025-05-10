@@ -20,6 +20,10 @@ func ResolveAddress(addr []string) string {
 }
 
 func GetWorkDir() string {
+	wd := os.Getenv("APP_PATH")
+	if len(wd) > 0 {
+		return wd
+	}
 	wd, err := os.Getwd()
 	if err != nil {
 		return ""

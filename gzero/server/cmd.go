@@ -1,13 +1,15 @@
-package gzero
+package server
 
 import (
 	"google.golang.org/grpc"
 )
 
 type Command struct {
-	Name         string
-	AppPath      string
-	RegisTerFunc func(grpcServer *grpc.Server)
+	AppPath            string
+	Plugins            []Plugin
+	UnaryInterceptors  []grpc.UnaryServerInterceptor
+	StreamInterceptors []grpc.StreamServerInterceptor
+	RegisterServer     func(grpcServer *grpc.Server)
 	// PreRun: children of this command will not inherit.
 	PreRun func() error
 	// PostRun: run after the Run command.

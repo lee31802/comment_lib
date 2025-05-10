@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"github.com/gin-gonic/gin"
-	"github.com/lee31802/comment_lib/ginerrors"
+	"github.com/lee31802/comment_lib/gerrors"
 	"github.com/lee31802/comment_lib/gweb"
 	"net/http"
 )
@@ -54,15 +54,15 @@ func (m *Module) Init(r gweb.Router) {
 	}
 }
 
-func (req *Req) Parse(c *gin.Context) ginerrors.Error {
+func (req *Req) Parse(c *gin.Context) gerrors.Error {
 	return nil
 }
 
-func (req *Req) Validate() ginerrors.Error {
+func (req *Req) Validate() gerrors.Error {
 	if req.StoreID == 0 || req.LastID == nil {
-		return ginerrors.ErrorParamsInvalid
+		return gerrors.ErrorParamsInvalid
 	}
-	return ginerrors.Success
+	return gerrors.Success
 }
 
 func (m *Module) QueryStoreRatingV2(ctx context.Context, req *Req) gweb.Response {
@@ -70,7 +70,7 @@ func (m *Module) QueryStoreRatingV2(ctx context.Context, req *Req) gweb.Response
 		Tags: []string{"llllxxx"},
 	}
 
-	return gweb.JSONResponse(http.StatusOK, ginerrors.Success, Resp{
+	return gweb.JSONResponse(http.StatusOK, gerrors.Success, Resp{
 		User: getTagsResp,
 		Id:   req.StoreID,
 		Last: req.LastID,
@@ -78,5 +78,5 @@ func (m *Module) QueryStoreRatingV2(ctx context.Context, req *Req) gweb.Response
 }
 
 func (m *Module) GetDriverTags(ctx context.Context) gweb.Response {
-	return gweb.JSONResponse(http.StatusOK, ginerrors.Success, "sucess")
+	return gweb.JSONResponse(http.StatusOK, gerrors.Success, "sucess")
 }

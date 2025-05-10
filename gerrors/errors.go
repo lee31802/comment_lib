@@ -1,4 +1,4 @@
-package ginerrors
+package gerrors
 
 import (
 	"encoding/json"

@@ -1,4 +1,4 @@
-package gzero
+package logkit
 
 import (
 	"fmt"
@@ -12,6 +12,6 @@ func DebugPrint(format string, values ...interface{}) {
 		if !strings.HasSuffix(format, "\n") {
 			format += "\n"
 		}
-		fmt.Fprintf(os.Stderr, "[GoZero] "+format, values...)
+		fmt.Fprintf(os.Stderr, "[logkit] "+format, values...)
 	}
 }

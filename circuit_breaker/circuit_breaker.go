@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lee31802/comment_lib/ginerrors"
+	"github.com/lee31802/comment_lib/gerrors"
 	"google.golang.org/grpc/codes"
 )
 
@@ -23,10 +23,10 @@ const (
 
 var (
 	// ErrTooManyRequests is returned when the CB state is half open and the requests count is over the cb maxRequests
-	ErrTooManyRequests = ginerrors.Errorf(int32(codes.Unavailable), "%s", "request dropped by breaker, circuit breaker is halfopen")
+	ErrTooManyRequests = gerrors.Errorf(int32(codes.Unavailable), "%s", "request dropped by breaker, circuit breaker is halfopen")
 	// ErrOpenState is returned when the CB state is open
-	ErrOpenState = ginerrors.Errorf(int32(codes.Unavailable), "%s", "request dropped by breaker, circuit breaker is open")
-	ErrRecovery  = ginerrors.Errorf(int32(codes.Internal), "%s", "request recovery happend")
+	ErrOpenState = gerrors.Errorf(int32(codes.Unavailable), "%s", "request dropped by breaker, circuit breaker is open")
+	ErrRecovery  = gerrors.Errorf(int32(codes.Internal), "%s", "request recovery happend")
 )
 
 // String implements stringer interface.
@@ -233,7 +233,7 @@ func (cb *CircuitBreaker) AfterRequest(before uint64, err error) {
 
 	// set fail if error not nil & not rpc error
 	if err != nil {
-		if _, ok := err.(ginerrors.Error); !ok {
+		if _, ok := err.(gerrors.Error); !ok {
 			success = false
 		}
 	}

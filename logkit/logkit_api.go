@@ -2,6 +2,7 @@ package logkit
 
 import (
 	"context"
+	"github.com/lee31802/comment_lib/conf"
 	"go.uber.org/zap"
 
 	"go.uber.org/zap/zapcore"
@@ -10,6 +11,7 @@ import (
 var (
 	defaultLogger *LogkitLogger
 	level         zapcore.Level
+	cfg           *conf.Configuration
 )
 
 type key int
@@ -20,17 +22,40 @@ const (
 )
 
 func init() {
-	// init default logger by default options
+	// init default logger by default client
 	// which would not return error, so don't need handle error
 	defaultLogger, _ = newLogger(defaultOptions...)
 }
 
-// Init will reset logger's options, so need recreate defaultLogger
+func getCfgOptions() Options {
+	err := cfg.UnmarshalKey("log", &logOpts)
+	if err != nil {
+		DebugPrint("unmarshal loggit err: %v", err)
+	}
+	return logOpts
+}
+
+// Init will reset logger's client, so need recreate defaultLogger
 // maybe Init isn't a good function name
 // but keep it in order to maintain compatibility
-func Init(opts ...Option) error {
+func Init() error {
 	var err error
-	defaultLogger, err = newLogger(opts...)
+	var has bool
+	has, cfg = initConfiguration(logOpts.appPath)
+	if has {
+		getCfgOptions()
+	}
+	defaultLogger, err = newLogger(
+		Level(logOpts.level),
+		Path(logOpts.path),
+		MaxSize(logOpts.maxSize),
+		MaxBackups(logOpts.maxBackups),
+		MaxAge(logOpts.maxAge),
+		BufferSize(logOpts.bufferSize),
+		ChannelSize(logOpts.channelSize),
+		EnableConsole(logOpts.enableConsole),
+		ErrorAsync(logOpts.errorAsync),
+	)
 	return err
 }
 

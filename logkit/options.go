@@ -2,6 +2,7 @@ package logkit
 
 import (
 	"github.com/lee31802/comment_lib/logkit/encoder"
+	"github.com/lee31802/comment_lib/util"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -41,6 +42,7 @@ func newOptions() *Options {
 }
 
 type Options struct {
+	appPath       string
 	path          string
 	maxSize       int
 	maxBackups    int
@@ -55,9 +57,22 @@ type Options struct {
 	encoderBuilder encoderBuilder
 }
 
+var logOpts Options
+
 type Option func(*Options)
 type encoderBuilder func(cfg zapcore.EncoderConfig) zapcore.Encoder
 
+func Configure(options ...Option) {
+	for _, setter := range options {
+		setter(&logOpts)
+	}
+}
+
+func AppPath(path string) Option {
+	return func(o *Options) {
+		o.appPath = util.GetWorkDir()
+	}
+}
 func Path(p string) Option {
 	return func(o *Options) {
 		o.path = p

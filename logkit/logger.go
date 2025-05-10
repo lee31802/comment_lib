@@ -90,7 +90,7 @@ func newLogger(opts ...Option) (*LogkitLogger, error) {
 		consoleHandler := zapcore.Lock(os.Stdout)
 		zapCores = append(zapCores, zapcore.NewCore(zapcore.NewConsoleEncoder(devEncoder), consoleHandler, zapcore.DebugLevel))
 	}
-	// create options with priority for our opts
+	// create client with priority for our opts
 	defaultZapOptions := []zap.Option{}
 	if options.enableCaller {
 		defaultZapOptions = append(
