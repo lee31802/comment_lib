@@ -1,7 +1,3 @@
-/**
- * @Author: wangxinyu
- * @Date: 2024/8/29 11:14
- */
 package registry
 
 import (
@@ -11,33 +7,6 @@ import (
 
 	"github.com/redis/go-redis/v9"
 )
-
-type DispatchRedis struct {
-	// cfg     RedisDbDesc
-	rSingle map[string][]*DbDescriptor
-}
-
-type DbDescriptor struct {
-	DbName   string
-	conn     *redis.Client
-	DbID     int
-	UserMode int
-}
-
-type ShardFunc func(key string, length int) (uint64, error)
-
-func (t *DispatchRedis) GetDb(dbName string, key string, fun ShardFunc) (*redis.Client, error) {
-	descDb, ok := t.rSingle[dbName]
-	if !ok {
-		return nil, fmt.Errorf("no found db with name %s", dbName)
-	}
-	// 分片hash算法
-	rdb, err := fun(key, len(descDb))
-	if err != nil {
-		return nil, err
-	}
-	return descDb[rdb].conn, nil
-}
 
 // doConnectSingle 链接数据库
 func (t *DispatchRedis) doConnectSingle(dbAlias string, cfg []*RedisConfig) *redis.Client {
@@ -71,24 +40,18 @@ func (t *DispatchRedis) doConnectSingle(dbAlias string, cfg []*RedisConfig) *red
 	return nil
 }
 
-type RedisDbDesc struct {
-	Dbid      int    `json:"dbid"`
-	Host      string `json:"host"`
-	Port      int    `json:"port"`
-	Pwd       string `json:"pwd"`
-	UserIdMod int    `json:"useridmod"`
-}
-
-var (
-	rc *DispatchRedis
-)
-
-// MusConnectRedis connect redis server
-func MusConnectRedis(cfg map[string][]*RedisConfig) {
-	tr := new(DispatchRedis)
-	tr.rSingle = map[string][]*DbDescriptor{}
-	for k, v := range cfg {
-		tr.doConnectSingle(k, v)
+// NewClient 根据配置创建对应的Redis客户端
+func NewClient(cfg Config) (RedisClient, error) {
+	switch cfg.Mode {
+	case "cluster":
+		return newClusterClient(cfg.Cluster)
+	case "ring":
+		return newRingClient(cfg.Ring)
+	case "sentinel":
+		return newFailoverClient(cfg.Sentinel)
+	case "single":
+		return newDefaultClient(cfg.Standalone)
+	default:
+		return nil, fmt.Errorf("unsupported redis mode: %s", cfg.Mode)
 	}
-	rc = tr
 }

@@ -1,7 +1,3 @@
-/**
- * @Author: wangxinyu
- * @Date: 2024/9/14 18:21
- */
 package registry
 
 import (
