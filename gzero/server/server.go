@@ -109,6 +109,7 @@ func initConfiguration(appPath string, env *env.Environ) *conf.Configuration {
 			break
 		}
 	}
+
 	return config
 }
 

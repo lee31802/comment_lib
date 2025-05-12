@@ -2,7 +2,6 @@ package logkit
 
 import (
 	"github.com/lee31802/comment_lib/logkit/encoder"
-	"github.com/lee31802/comment_lib/util"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -42,7 +41,7 @@ func newOptions() *Options {
 }
 
 type Options struct {
-	appPath       string
+	configPath    string
 	Path          string `mapstructure:"Path"`
 	MaxSize       int    `mapstructure:"MaxSize"`
 	MaxBackups    int    `mapstructure:"MaxBackups"`
@@ -68,49 +67,70 @@ func Configure(options ...Option) {
 	}
 }
 
-func AppPath(path string) Option {
+func ConfigPath(path string) Option {
 	return func(o *Options) {
-		o.appPath = util.GetWorkDir()
+		o.configPath = path
 	}
 }
 func Path(p string) Option {
 	return func(o *Options) {
+		if p == "" {
+			return
+		}
 		o.Path = p
 	}
 }
 
 func MaxSize(m int) Option {
 	return func(o *Options) {
+		if m == 0 {
+			return
+		}
 		o.MaxSize = m
 	}
 }
 
 func MaxBackups(m int) Option {
 	return func(o *Options) {
+		if m == 0 {
+			return
+		}
 		o.MaxBackups = m
 	}
 }
 
 func MaxAge(m int) Option {
 	return func(o *Options) {
+		if m == 0 {
+			return
+		}
 		o.MaxAge = m
 	}
 }
 
 func Level(l string) Option {
 	return func(o *Options) {
+		if l == "" {
+			return
+		}
 		o.Level = l
 	}
 }
 
 func BufferSize(b int) Option {
 	return func(o *Options) {
+		if b == 0 {
+			return
+		}
 		o.BufferSize = b
 	}
 }
 
 func ChannelSize(c int) Option {
 	return func(o *Options) {
+		if c == 0 {
+			return
+		}
 		o.ChannelSize = c
 	}
 }

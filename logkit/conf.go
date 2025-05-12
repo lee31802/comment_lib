@@ -9,25 +9,25 @@ import (
 	"path"
 )
 
-func initConfiguration(appPath string) (bool, *conf.Configuration) {
-	if appPath == "" {
-		appPath = util.GetWorkDir()
-	}
+func initConfiguration(configPath string) (bool, *conf.Configuration) {
 	env := env2.Environment()
 	config := conf.NewConfiguration()
 	configName := fmt.Sprintf("config_%v.yml", env)
-	configPath := path.Join(appPath, "conf", configName)
-	defaultConfigPath := path.Join(appPath, "conf", "config.yml")
-	has := false
-	for _, path := range []string{configPath, defaultConfigPath} {
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			DebugPrint("load app config error: %v", err.Error())
-		} else {
-			DebugPrint("load app config: %v", path)
-			has = true
-			config.Apply(path)
-			break
-		}
+	if configPath == "" {
+		appPath := util.GetWorkDir()
+		configPath = path.Join(appPath, "conf")
 	}
+	logOpts.configPath = configPath
+	configPath = path.Join(configPath, configName)
+	has := false
+
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		DebugPrint("load app config error: %v", err.Error())
+	} else {
+		DebugPrint("load app config: %v", configPath)
+		has = true
+		config.Apply(configPath)
+	}
+
 	return has, config
 }

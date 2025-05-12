@@ -35,10 +35,13 @@ func getCfgOptions() Options {
 	return logOpts
 }
 
-func Init() error {
+func InitByCfg(options ...Option) error {
+	for _, option := range options {
+		option(&logOpts)
+	}
 	var err error
 	var has bool
-	has, cfg = initConfiguration(logOpts.appPath)
+	has, cfg = initConfiguration(logOpts.configPath)
 	if has {
 		getCfgOptions()
 	}

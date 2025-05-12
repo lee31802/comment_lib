@@ -125,6 +125,7 @@ func initConfiguration(appPath string, env *env.Environ) *conf.Configuration {
 			break
 		}
 	}
+
 	return config
 }
 
@@ -158,19 +159,29 @@ func (g *gWeb) initComponents(cmd Command) {
 		injector: g.injector,
 		rg:       rg,
 	}
-	if g.opts.UploadMetrics {
-		//p := ginprometheus.NewPrometheus()
-		//p.SetGetHandlerNameFunc(g.GetHdlSimpleNameByUrl)
-		//rg.Use(p.HandlerFunc(CtxKeyHandlerName))
-	}
+	//if g.opts.UploadMetrics {
+	//	p := ginprometheus.NewPrometheus()
+	//	p.SetGetHandlerNameFunc(g.GetHdlSimpleNameByUrl)
+	//	rg.Use(p.HandlerFunc(CtxKeyHandlerName))
+	//}
 
-	if g.opts.Jaeger.Enable {
-		//trace.InitJaegerTracer(env.GetService(), g.opts.Jaeger.SamplingRate)
-		//middlewares = append(middlewares, jaeger.RequestTracing(pathHanlderMap))
-	}
+	//if g.opts.Jaeger.Enable {
+	//	trace.InitJaegerTracer(env.GetService(), g.opts.Jaeger.SamplingRate)
+	//	middlewares = append(middlewares, jaeger.RequestTracing(pathHanlderMap))
+	//}
 
 	//if env.SupportPfb() {
 	//	middlewares = append(middlewares, pfb.PFB())
+	//}
+
+	// Init template
+	//if g.opts.TemplatePath != "" {
+	//	g.engine.LoadHTMLGlob(g.opts.TemplatePath)
+	//} else {
+	//	templatePath := path.Join(g.appPath, "templates")
+	//	if _, err := os.Stat(templatePath); err == nil {
+	//		g.engine.LoadHTMLGlob(fmt.Sprintf("%v/*", templatePath))
+	//	}
 	//}
 
 	for _, m := range middlewares {

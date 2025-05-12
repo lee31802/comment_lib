@@ -1,31 +1,35 @@
 package gredis
 
 import (
-	"github.com/lee31802/comment_lib/conf"
 	redis "github.com/redis/go-redis/v9"
 )
 
 // 分片
 type RingOptions struct {
-	appPath string
 	redis.RingOptions
 }
 
 // 集群
 type ClusterOptions struct {
-	appPath string
 	redis.ClusterOptions
 }
 
 // 哨兵
-type FailoverClientOptions struct {
-	appPath string
+type FailoverOptions struct {
 	redis.FailoverOptions
 }
 
-type DefaultClientOptions struct {
-	appPath string
+type SingleOptions struct {
 	redis.Options
+}
+
+type Options struct {
+	configPath string
+	Mode       string          `json:"mode" yaml:"mode"` // single, cluster, ring, sentinel
+	Cluster    ClusterOptions  `json:"cluster" yaml:"cluster"`
+	Ring       RingOptions     `json:"ring" yaml:"ring"`
+	Sentinel   FailoverOptions `json:"sentinel" yaml:"sentinel"`
+	Single     SingleOptions   `json:"Single" yaml:"Single"`
 }
 
 const (
@@ -38,25 +42,11 @@ const (
 	DefaultIdleTimeout  = 60000
 )
 
-func newDefaultOptions() *DefaultClientOptions {
-	return &DefaultClientOptions{}
-}
+type Option func(*Options)
 
-// Option defines a function to modify client.
-type Option func(*DefaultClientOptions)
-
-func (opts *DefaultClientOptions) updateFromConfig(cfg *conf.Configuration) {
-	//zClient := zrpc.RpcClientConf{}
-	//err := cfg.UnmarshalKey(opts.serviceName, &zClient)
-	//if err != nil {
-	//	log.Printf("unmarshal gozero client config err: %v", err)
-	//}
-	//opts.Client = zClient
-}
-
-// WithAppPath sets application path.
-func WithAppPath(appPath string) Option {
-	return func(opts *DefaultClientOptions) {
-		opts.appPath = appPath
+// WithConfigPath sets application path.
+func WithConfigPath(configPath string) Option {
+	return func(opts *Options) {
+		opts.configPath = configPath
 	}
 }

@@ -11,7 +11,7 @@ var (
 	cmd = &gweb.Command{
 		Name: "test",
 		PreRun: func(router gweb.Router) error {
-			logkit.Init()
+			logkit.InitByCfg()
 			logkit.Error("success2222")
 			router.GET("/", func() string { return "OK" })
 			return nil
