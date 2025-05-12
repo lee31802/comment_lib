@@ -48,18 +48,19 @@ func (c *client) initClient() zrpc.Client {
 	return zrpc.MustNewClient(c.opts.Client)
 }
 
-func initConfiguration(appPath, configPath string, env *env.Environ) *conf.Configuration {
+func initConfiguration(appPath string, env *env.Environ) *conf.Configuration {
 	config := conf.NewConfiguration()
 	configName := fmt.Sprintf("config_%v.yml", env.Env)
-	if configPath == "" {
-		configPath = path.Join(appPath, "conf")
-	}
-	configPath = path.Join(configPath, configName)
-
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		gzero.DebugPrint("load app config error: %v", err.Error())
-	} else {
-		gzero.DebugPrint("load app config: %v", configPath)
+	configPath := path.Join(appPath, "conf", configName)
+	defaultConfigPath := path.Join(appPath, "conf", "config.yml")
+	for _, path := range []string{configPath, defaultConfigPath} {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			gzero.DebugPrint("load app config error: %v", err.Error())
+		} else {
+			gzero.DebugPrint("load app config: %v", path)
+			config.Apply(path)
+			break
+		}
 	}
 
 	return config
@@ -69,7 +70,11 @@ func (c *client) initConfig() {
 	if c.opts.serviceName == "" {
 		panic("service name not set")
 	}
-	configPath := c.opts.configPath
-	*c.config = *initConfiguration(c.appPath, configPath, c.environ)
+	appPath := c.opts.appPath
+	if appPath == "" {
+		appPath = util.GetWorkDir()
+	}
+	c.appPath = appPath
+	*c.config = *initConfiguration(appPath, c.environ)
 	c.opts.updateFromConfig(c.config)
 }

@@ -8,7 +8,7 @@ import (
 )
 
 type Options struct {
-	configPath  string
+	appPath     string
 	serviceName string
 	Client      zrpc.RpcClientConf
 }
@@ -36,10 +36,10 @@ func (opts *Options) updateFromConfig(cfg *conf.Configuration) {
 	opts.Client = zClient
 }
 
-// WithConfigPath sets application path.
-func WithConfigPath(appPath string) Option {
+// WithAppPath sets application path.
+func WithAppPath(appPath string) Option {
 	return func(opts *Options) {
-		opts.configPath = appPath
+		opts.appPath = appPath
 	}
 }
 
