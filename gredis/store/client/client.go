@@ -1,7 +1,3 @@
-/**
- * @Author: wangxinyu
- * @Date: 2024/9/4 23:09
- */
 package client
 
 import (
@@ -10,20 +6,19 @@ import (
 	"reflect"
 	"sdk-go/pkg/store/registry"
 	"time"
-	"tygit.tuyoo.com/gocomponents/glog"
 
 	"github.com/redis/go-redis/v9"
 )
 
 var Nil = redis.Nil
 
-type StoreClient struct {
+type RedisClient struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 	dbs    registry.Register
 }
 
-func (s *StoreClient) ZAdd(ctx context.Context, key string, members ...redis.Z) *redis.IntCmd {
+func (s *RedisClient) ZAdd(ctx context.Context, key string, members ...redis.Z) *redis.IntCmd {
 	// TODO 这个保护感觉必要性不大
 	if ctx == nil {
 		ctx = context.Background()
@@ -36,7 +31,7 @@ func (s *StoreClient) ZAdd(ctx context.Context, key string, members ...redis.Z) 
 	return cli.ZAdd(ctx, key, members...)
 }
 
-func (s *StoreClient) ZCount(ctx context.Context, key, min, max string) *redis.IntCmd {
+func (s *RedisClient) ZCount(ctx context.Context, key, min, max string) *redis.IntCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -47,7 +42,7 @@ func (s *StoreClient) ZCount(ctx context.Context, key, min, max string) *redis.I
 	return cli.ZCount(ctx, key, min, max)
 }
 
-func (s *StoreClient) ZCard(ctx context.Context, key string) *redis.IntCmd {
+func (s *RedisClient) ZCard(ctx context.Context, key string) *redis.IntCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -58,7 +53,7 @@ func (s *StoreClient) ZCard(ctx context.Context, key string) *redis.IntCmd {
 	return cli.ZCard(ctx, key)
 }
 
-func (s *StoreClient) ZRem(ctx context.Context, key string, members ...interface{}) *redis.IntCmd {
+func (s *RedisClient) ZRem(ctx context.Context, key string, members ...interface{}) *redis.IntCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -69,7 +64,7 @@ func (s *StoreClient) ZRem(ctx context.Context, key string, members ...interface
 	return cli.ZRem(ctx, key, members...)
 }
 
-func (s *StoreClient) TTL(ctx context.Context, key string) *redis.DurationCmd {
+func (s *RedisClient) TTL(ctx context.Context, key string) *redis.DurationCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -80,7 +75,7 @@ func (s *StoreClient) TTL(ctx context.Context, key string) *redis.DurationCmd {
 	return cli.TTL(ctx, key)
 }
 
-func (s *StoreClient) Incr(ctx context.Context, key string) *redis.IntCmd {
+func (s *RedisClient) Incr(ctx context.Context, key string) *redis.IntCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -91,7 +86,7 @@ func (s *StoreClient) Incr(ctx context.Context, key string) *redis.IntCmd {
 	return cli.Incr(ctx, key)
 }
 
-func (s *StoreClient) IncrBy(ctx context.Context, key string, value int64) *redis.IntCmd {
+func (s *RedisClient) IncrBy(ctx context.Context, key string, value int64) *redis.IntCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -102,7 +97,7 @@ func (s *StoreClient) IncrBy(ctx context.Context, key string, value int64) *redi
 	return cli.IncrBy(ctx, key, value)
 }
 
-func (s *StoreClient) IncrByFloat(ctx context.Context, key string, value float64) *redis.FloatCmd {
+func (s *RedisClient) IncrByFloat(ctx context.Context, key string, value float64) *redis.FloatCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -113,7 +108,7 @@ func (s *StoreClient) IncrByFloat(ctx context.Context, key string, value float64
 	return cli.IncrByFloat(ctx, key, value)
 }
 
-func (s *StoreClient) Decr(ctx context.Context, key string) *redis.IntCmd {
+func (s *RedisClient) Decr(ctx context.Context, key string) *redis.IntCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -124,7 +119,7 @@ func (s *StoreClient) Decr(ctx context.Context, key string) *redis.IntCmd {
 	return cli.Decr(ctx, key)
 }
 
-func (s *StoreClient) DecrBy(ctx context.Context, key string, decrement int64) *redis.IntCmd {
+func (s *RedisClient) DecrBy(ctx context.Context, key string, decrement int64) *redis.IntCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -135,7 +130,7 @@ func (s *StoreClient) DecrBy(ctx context.Context, key string, decrement int64) *
 	return cli.DecrBy(ctx, key, decrement)
 }
 
-func (s *StoreClient) Append(ctx context.Context, key, value string) *redis.IntCmd {
+func (s *RedisClient) Append(ctx context.Context, key, value string) *redis.IntCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -146,7 +141,7 @@ func (s *StoreClient) Append(ctx context.Context, key, value string) *redis.IntC
 	return cli.Append(ctx, key, value)
 }
 
-func (s *StoreClient) HKeys(ctx context.Context, key string) *redis.StringSliceCmd {
+func (s *RedisClient) HKeys(ctx context.Context, key string) *redis.StringSliceCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -179,7 +174,7 @@ func GetFieldNamesAndValues(t interface{}) []interface{} {
 	return result
 }
 
-func (s *StoreClient) HMSet(ctx context.Context, key string, resp interface{}) *redis.BoolCmd {
+func (s *RedisClient) HMSet(ctx context.Context, key string, resp interface{}) *redis.BoolCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -191,7 +186,7 @@ func (s *StoreClient) HMSet(ctx context.Context, key string, resp interface{}) *
 	return cli.HMSet(ctx, key, fields...)
 }
 
-func (s *StoreClient) HSet(ctx context.Context, key string, values ...interface{}) *redis.IntCmd {
+func (s *RedisClient) HSet(ctx context.Context, key string, values ...interface{}) *redis.IntCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -202,7 +197,7 @@ func (s *StoreClient) HSet(ctx context.Context, key string, values ...interface{
 	return cli.HSet(ctx, key, values...)
 }
 
-func (s *StoreClient) LPush(ctx context.Context, key string, values ...interface{}) *redis.IntCmd {
+func (s *RedisClient) LPush(ctx context.Context, key string, values ...interface{}) *redis.IntCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -213,7 +208,7 @@ func (s *StoreClient) LPush(ctx context.Context, key string, values ...interface
 	return cli.LPush(ctx, key, values...)
 }
 
-func (s *StoreClient) LRange(ctx context.Context, key string, start, stop int64) *redis.StringSliceCmd {
+func (s *RedisClient) LRange(ctx context.Context, key string, start, stop int64) *redis.StringSliceCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -226,7 +221,7 @@ func (s *StoreClient) LRange(ctx context.Context, key string, start, stop int64)
 
 // Set string set命令
 // expires 单位为秒
-func (s *StoreClient) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.StatusCmd {
+func (s *RedisClient) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.StatusCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -237,7 +232,7 @@ func (s *StoreClient) Set(ctx context.Context, key string, value interface{}, ex
 	return cli.Set(ctx, key, value, expiration)
 }
 
-func (s *StoreClient) GetSet(ctx context.Context, key string, value interface{}) *redis.StringCmd {
+func (s *RedisClient) GetSet(ctx context.Context, key string, value interface{}) *redis.StringCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -248,7 +243,7 @@ func (s *StoreClient) GetSet(ctx context.Context, key string, value interface{})
 	return cli.GetSet(ctx, key, value)
 }
 
-func (s *StoreClient) SetEx(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.StatusCmd {
+func (s *RedisClient) SetEx(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.StatusCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -259,7 +254,7 @@ func (s *StoreClient) SetEx(ctx context.Context, key string, value interface{}, 
 	return cli.SetEx(ctx, key, value, expiration)
 }
 
-func (s *StoreClient) SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.BoolCmd {
+func (s *RedisClient) SetNX(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.BoolCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -270,12 +265,12 @@ func (s *StoreClient) SetNX(ctx context.Context, key string, value interface{}, 
 	return cli.SetNX(ctx, key, value, expiration)
 }
 
-func (s *StoreClient) toBoolean(val string) bool {
+func (s *RedisClient) toBoolean(val string) bool {
 	r := val
 	return r == "OK" || r == "1" || r == "true"
 }
 
-func (s *StoreClient) Get(ctx context.Context, key string) *redis.StringCmd {
+func (s *RedisClient) Get(ctx context.Context, key string) *redis.StringCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -285,7 +280,7 @@ func (s *StoreClient) Get(ctx context.Context, key string) *redis.StringCmd {
 	}
 	return cli.Get(ctx, key)
 }
-func (s *StoreClient) HGetAll(ctx context.Context, key string) *redis.MapStringStringCmd {
+func (s *RedisClient) HGetAll(ctx context.Context, key string) *redis.MapStringStringCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -296,7 +291,7 @@ func (s *StoreClient) HGetAll(ctx context.Context, key string) *redis.MapStringS
 	return cli.HGetAll(ctx, key)
 }
 
-func (s *StoreClient) HGet(ctx context.Context, key, field string) *redis.StringCmd {
+func (s *RedisClient) HGet(ctx context.Context, key, field string) *redis.StringCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -334,7 +329,7 @@ func GetRedisTags(t interface{}) []string {
 	return tags
 }
 
-func (s *StoreClient) HMGet(ctx context.Context, key string, resp interface{}) *redis.SliceCmd {
+func (s *RedisClient) HMGet(ctx context.Context, key string, resp interface{}) *redis.SliceCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -349,7 +344,7 @@ func (s *StoreClient) HMGet(ctx context.Context, key string, resp interface{}) *
 	return cli.HMGet(ctx, key, fields...)
 }
 
-func (s *StoreClient) SAdd(ctx context.Context, key string, members ...interface{}) *redis.IntCmd {
+func (s *RedisClient) SAdd(ctx context.Context, key string, members ...interface{}) *redis.IntCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -360,7 +355,7 @@ func (s *StoreClient) SAdd(ctx context.Context, key string, members ...interface
 	return cli.SAdd(ctx, key, members...)
 }
 
-func (s *StoreClient) SMIsMember(ctx context.Context, key string, members ...interface{}) *redis.BoolSliceCmd {
+func (s *RedisClient) SMIsMember(ctx context.Context, key string, members ...interface{}) *redis.BoolSliceCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -371,7 +366,7 @@ func (s *StoreClient) SMIsMember(ctx context.Context, key string, members ...int
 	return cli.SMIsMember(ctx, key, members...)
 }
 
-func (s *StoreClient) Del(ctx context.Context, key string) *redis.IntCmd {
+func (s *RedisClient) Del(ctx context.Context, key string) *redis.IntCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -383,7 +378,7 @@ func (s *StoreClient) Del(ctx context.Context, key string) *redis.IntCmd {
 }
 
 // Exists 判断key是否存在
-func (s *StoreClient) Exists(ctx context.Context, key string) *redis.IntCmd {
+func (s *RedisClient) Exists(ctx context.Context, key string) *redis.IntCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -394,7 +389,7 @@ func (s *StoreClient) Exists(ctx context.Context, key string) *redis.IntCmd {
 	return cli.Exists(ctx, key)
 }
 
-func (s *StoreClient) Expire(ctx context.Context, key string, duration time.Duration) *redis.BoolCmd {
+func (s *RedisClient) Expire(ctx context.Context, key string, duration time.Duration) *redis.BoolCmd {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -405,21 +400,28 @@ func (s *StoreClient) Expire(ctx context.Context, key string, duration time.Dura
 	return cli.Expire(ctx, key, duration)
 }
 
-func NewHashClient(dbName string) *StoreClient {
-	sc := new(StoreClient)
+func NewRingClient(dbName string) *RedisClient {
+	sc := new(RedisClient)
 	// TODO 连接上做5s超时干嘛？
 	sc.ctx, sc.cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	sc.dbs = registry.NewHashRedisClient(dbName)
 	return sc
 }
-func NewSingleClient(dbName string) *StoreClient {
-	sc := new(StoreClient)
+func NewClusterClient(dbName string) *RedisClient {
+	sc := new(RedisClient)
 	sc.ctx, sc.cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	sc.dbs = registry.NewSingleRedisClient(dbName)
 	return sc
 }
-func NewUserClient(dbName string) *StoreClient {
-	sc := new(StoreClient)
+func NewFailoverClient(dbName string) *RedisClient {
+	sc := new(RedisClient)
+	sc.ctx, sc.cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	sc.dbs = registry.NewUserIdRedisClient(dbName)
+	return sc
+}
+
+func NewDefaultClient(dbName string) *RedisClient {
+	sc := new(RedisClient)
 	sc.ctx, sc.cancel = context.WithTimeout(context.Background(), 5*time.Second)
 	sc.dbs = registry.NewUserIdRedisClient(dbName)
 	return sc
