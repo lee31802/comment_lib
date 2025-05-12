@@ -19,7 +19,6 @@ var (
 		PreStop: func() error {
 			return logkit.Sync()
 		},
-		Modules: []gweb.Module{NewRatingModule()},
 	}
 	gz = &server.Command{
 		RegisterServer: func(grpcServer *grpc.Server) {
